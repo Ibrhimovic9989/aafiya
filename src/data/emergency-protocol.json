@@ -1,0 +1,292 @@
+{
+  "meta": {
+    "disclaimer": "This protocol is for informational purposes only. It does not replace professional medical advice. When in doubt, always seek emergency medical care.",
+    "lastUpdated": "2025-12"
+  },
+  "assessSeverity": {
+    "description": "Ask yourself these questions to gauge flare severity on a scale of mild, moderate, or severe.",
+    "questions": [
+      {
+        "question": "How many bowel movements are you having per day?",
+        "mild": "4-6 per day, soft but formed",
+        "moderate": "6-10 per day, mostly liquid",
+        "severe": "More than 10 per day, entirely liquid or incontinent"
+      },
+      {
+        "question": "Is there blood in your stool?",
+        "mild": "Occasional streaks of blood",
+        "moderate": "Blood with most bowel movements",
+        "severe": "Large amounts of blood, passing clots, or blood without stool"
+      },
+      {
+        "question": "What is your pain level (0-10)?",
+        "mild": "1-3, intermittent cramping that resolves",
+        "moderate": "4-6, persistent cramping affecting daily activities",
+        "severe": "7-10, constant severe pain, unable to function"
+      },
+      {
+        "question": "Are you able to eat and drink?",
+        "mild": "Eating reduced amounts but keeping food down",
+        "moderate": "Eating very little, some nausea",
+        "severe": "Unable to eat or drink, vomiting everything"
+      },
+      {
+        "question": "Do you have a fever?",
+        "mild": "No fever",
+        "moderate": "Low-grade fever (99-100.4F / 37.2-38C)",
+        "severe": "High fever (>100.4F / >38C) or chills and rigors"
+      },
+      {
+        "question": "How is your energy level?",
+        "mild": "Somewhat fatigued but can do most activities",
+        "moderate": "Very fatigued, difficulty completing daily tasks",
+        "severe": "Unable to get out of bed, dizziness on standing"
+      },
+      {
+        "question": "Are you showing signs of dehydration?",
+        "mild": "Slightly thirsty, normal urine output",
+        "moderate": "Dry mouth, reduced urine output, darker urine",
+        "severe": "Very dry mouth, little or no urine, rapid heart rate, dizziness"
+      },
+      {
+        "question": "Do you have any abdominal distension or rigidity?",
+        "mild": "Mild bloating",
+        "moderate": "Noticeable distension with tenderness",
+        "severe": "Rigid abdomen, rebound tenderness, unable to tolerate touch"
+      }
+    ]
+  },
+  "immediateActions": {
+    "description": "Step-by-step actions to take when a flare begins.",
+    "steps": [
+      {
+        "step": 1,
+        "action": "Stop and assess severity",
+        "details": "Use the severity assessment questions above. Log your symptoms including bowel movement count, blood amount, pain level, temperature, and time of onset."
+      },
+      {
+        "step": 2,
+        "action": "Begin oral rehydration",
+        "details": "Start sipping clear fluids: oral rehydration solution (ORS), diluted electrolyte drinks, clear broth, or water with a pinch of salt and sugar. Aim for at least 8 oz every hour. Avoid sugary drinks and caffeine."
+      },
+      {
+        "step": 3,
+        "action": "Switch to a low-residue diet",
+        "details": "Stop all raw fruits, vegetables, whole grains, seeds, and nuts. Switch to white rice, plain chicken, bananas, applesauce, toast (BRAT), bone broth, and well-cooked peeled potatoes."
+      },
+      {
+        "step": 4,
+        "action": "Check your medications",
+        "details": "Ensure you have not missed any doses. Do NOT increase steroid dose without doctor approval. If you have a rescue medication prescribed (e.g., budesonide, prednisone taper), check instructions for when to start it."
+      },
+      {
+        "step": 5,
+        "action": "Contact your gastroenterologist's office",
+        "details": "Call during business hours. Most GI offices have same-day nurse advice lines. Describe your symptoms clearly and note duration. Ask about adjusting medications."
+      },
+      {
+        "step": 6,
+        "action": "Manage pain appropriately",
+        "details": "Use a heating pad on the abdomen. Take acetaminophen (Tylenol) if needed. Do NOT take NSAIDs (ibuprofen, naproxen, aspirin) as they can worsen Crohn's inflammation. Try warm baths for perianal discomfort."
+      },
+      {
+        "step": 7,
+        "action": "Rest and reduce stress",
+        "details": "Cancel non-essential commitments. Stress can amplify flare symptoms. Practice deep breathing or guided meditation. Sleep is essential for recovery."
+      },
+      {
+        "step": 8,
+        "action": "Track and document",
+        "details": "Record bowel movements (time, consistency, blood), food intake, fluid intake, pain level, temperature, and medications taken. This log is invaluable for your doctor."
+      }
+    ]
+  },
+  "whenToCallDoctor": {
+    "description": "Contact your gastroenterologist's office (same day or next business day) if you experience any of the following.",
+    "criteria": [
+      "More than 6 loose/bloody stools per day for more than 2 days",
+      "Persistent abdominal pain not relieved by your usual measures",
+      "Low-grade fever (99-100.4F / 37.2-38C) lasting more than 24 hours",
+      "Blood in stool that is new or significantly increased",
+      "Unable to keep down medications for more than 24 hours",
+      "Worsening symptoms despite current treatment plan",
+      "New joint pain, eye redness or pain, or skin lesions (extra-intestinal manifestations)",
+      "Unintentional weight loss of more than 5 pounds in a week",
+      "New or worsening perianal pain, drainage, or swelling",
+      "Symptoms that have not improved after 3-5 days of prescribed rescue therapy",
+      "Any concern about your symptoms or medication side effects",
+      "Need for refills on rescue medications (e.g., prednisone)"
+    ]
+  },
+  "whenToGoER": {
+    "description": "Go to the emergency room immediately or call 911 if you experience any of the following.",
+    "criteria": [
+      "Severe abdominal pain that is constant and worsening, especially if abdomen is rigid or distended",
+      "Passing large amounts of blood - soaking through pads, passing large clots, or blood without stool",
+      "Signs of significant dehydration: dizziness or fainting on standing, rapid heart rate, confusion, no urination for 8+ hours",
+      "High fever (>101.3F / >38.5C) especially if on immunosuppressive medications",
+      "Persistent vomiting - unable to keep down any fluids for more than 12 hours",
+      "Signs of bowel obstruction: complete inability to pass gas or stool, severe bloating, bilious (green) vomiting",
+      "Signs of perforation: sudden severe pain that spreads across the abdomen, rigid abdomen, rebound tenderness",
+      "Signs of abscess: localized severe pain with high fever, chills, and rigors",
+      "Chest pain, shortness of breath, or calf swelling (blood clot risk is elevated in IBD flares)",
+      "Severe perianal pain with fever suggesting perianal abscess",
+      "Confusion, altered consciousness, or inability to stay awake",
+      "Any symptom that makes you feel your life is in danger - trust your instincts"
+    ]
+  },
+  "whatToTellER": {
+    "description": "Information to communicate quickly and clearly to ER staff. Prepare this in advance.",
+    "checklist": [
+      {
+        "item": "Diagnosis",
+        "detail": "State: 'I have Crohn's disease' - specify location (ileal, colonic, ileocolonic) and pattern (inflammatory, stricturing, penetrating) if you know it."
+      },
+      {
+        "item": "Current medications",
+        "detail": "List ALL medications including biologics (name, dose, last injection/infusion date), immunomodulators, steroids, and supplements. Bring medication list or bottles."
+      },
+      {
+        "item": "Allergies",
+        "detail": "List all drug allergies and type of reaction (rash, anaphylaxis, etc.)."
+      },
+      {
+        "item": "Surgical history",
+        "detail": "List any previous bowel surgeries (resections, strictureplasties), abscess drainages, or fistula procedures with approximate dates."
+      },
+      {
+        "item": "Current symptoms and timeline",
+        "detail": "When symptoms started, what has changed, number of bowel movements per day, amount of blood, pain location and severity, fever, last oral intake."
+      },
+      {
+        "item": "Gastroenterologist contact",
+        "detail": "Provide your GI doctor's name, practice, and phone number. Ask ER to contact them."
+      },
+      {
+        "item": "Immunosuppression status",
+        "detail": "Critical: Tell ER 'I am immunosuppressed' if on biologics, immunomodulators, or steroids. This changes how infections are investigated and treated."
+      },
+      {
+        "item": "Last labs and imaging",
+        "detail": "If recent, mention last colonoscopy date, recent CT/MRI results, recent blood work. Bring copies if available."
+      },
+      {
+        "item": "Pain medication concerns",
+        "detail": "Inform ER you have Crohn's - NSAIDs should be avoided. Acetaminophen is safe. If opioids are needed, ask about impact on bowel function."
+      },
+      {
+        "item": "IV contrast considerations",
+        "detail": "If CT scan is ordered, mention any previous contrast reactions. Note that bowel prep may not be possible during a flare."
+      }
+    ]
+  },
+  "hospitalBag": {
+    "description": "Keep a pre-packed bag ready for unexpected ER visits or hospital stays.",
+    "items": [
+      {
+        "item": "Medication list",
+        "detail": "Printed or digital list of ALL medications with doses and schedules. Include pharmacy contact info."
+      },
+      {
+        "item": "Insurance card and ID",
+        "detail": "Keep photocopies in the bag. Include a copy of your health insurance card (front and back)."
+      },
+      {
+        "item": "Phone and charger",
+        "detail": "Long charging cable and portable battery pack. Hospital stays can be long."
+      },
+      {
+        "item": "Comfortable clothing",
+        "detail": "Loose pajama pants or shorts with elastic waist. Easy on/off for frequent bathroom trips. Non-slip socks or slippers."
+      },
+      {
+        "item": "Toiletries",
+        "detail": "Wet wipes (fragrance-free), barrier cream (zinc oxide/Calmoseptine for perianal skin), lip balm, toothbrush, toothpaste, deodorant."
+      },
+      {
+        "item": "Comfort items",
+        "detail": "Small pillow or blanket (hospitals are cold), earplugs, eye mask, headphones."
+      },
+      {
+        "item": "Entertainment",
+        "detail": "Book, tablet, downloaded shows/podcasts. Hospital wifi can be unreliable."
+      },
+      {
+        "item": "Snacks (for recovery phase)",
+        "detail": "Once cleared to eat: plain crackers, applesauce cups, electrolyte packets. Nothing during NPO (nothing by mouth) orders."
+      },
+      {
+        "item": "Emergency contacts list",
+        "detail": "Printed list of emergency contacts, GI doctor, primary care doctor, pharmacy, and your health care proxy/power of attorney if applicable."
+      },
+      {
+        "item": "Medical records",
+        "detail": "Copy of recent colonoscopy report, surgical history, and recent labs if available. USB drive or printed copies."
+      },
+      {
+        "item": "Notebook and pen",
+        "detail": "For writing down doctor instructions, medication changes, questions, and discharge instructions."
+      },
+      {
+        "item": "Extra underwear",
+        "detail": "Bring several pairs. Accidents happen during flares and there is no shame in being prepared."
+      }
+    ]
+  },
+  "dietDuringFlare": {
+    "description": "Dietary recommendations during an active flare to minimize symptoms while maintaining nutrition.",
+    "phases": [
+      {
+        "phase": "Acute phase (days 1-3 of severe flare)",
+        "recommendations": [
+          "Clear liquids if tolerated: broth, oral rehydration solution, weak tea, gelatin",
+          "Sip fluids frequently - small amounts every 15-30 minutes rather than large volumes",
+          "Oral rehydration solution recipe: 1 liter water + 6 teaspoons sugar + 1/2 teaspoon salt",
+          "Avoid all solid food if vomiting or if instructed by your doctor (NPO)",
+          "Avoid caffeine, alcohol, carbonated beverages, and fruit juices (osmotic diarrhea risk)",
+          "Popsicles (non-dairy) can help with hydration if nauseous"
+        ]
+      },
+      {
+        "phase": "Transition phase (as symptoms begin to improve)",
+        "recommendations": [
+          "BRAT diet: bananas, white rice, applesauce, white toast",
+          "Bone broth - provides collagen, electrolytes, and amino acids including glycine and proline",
+          "Well-cooked, peeled, seedless vegetables: carrots, potatoes, squash",
+          "Plain chicken or turkey (baked or boiled, no skin)",
+          "Eggs (scrambled or soft-boiled)",
+          "Smooth nut butters in small amounts if tolerated",
+          "Oatmeal (well-cooked, made with water or lactose-free milk)",
+          "Eat small frequent meals (5-6 per day) rather than 3 large meals"
+        ]
+      },
+      {
+        "phase": "Recovery phase (flare resolving)",
+        "recommendations": [
+          "Gradually reintroduce foods one at a time over days",
+          "Add soft, well-cooked proteins: fish (salmon is anti-inflammatory), lean meats",
+          "Introduce low-FODMAP fruits: blueberries, strawberries, cantaloupe, firm banana",
+          "Add well-cooked low-fiber vegetables: zucchini, green beans, spinach",
+          "Consider lactose-free dairy or aged cheeses if previously tolerated",
+          "Reintroduce whole grains slowly: start with white rice, then oats, then quinoa",
+          "Keep a food diary to identify individual triggers during reintroduction",
+          "Continue to avoid known personal triggers, raw vegetables, seeds, popcorn, and spicy foods until fully in remission"
+        ]
+      }
+    ],
+    "generalPrinciples": [
+      "Stay hydrated - aim for pale yellow urine as a guide",
+      "Eat small, frequent meals rather than large ones",
+      "Chew food thoroughly - digestion begins in the mouth",
+      "Avoid very hot or very cold foods (may increase cramping)",
+      "Cook vegetables well and remove skins and seeds",
+      "Avoid high-fat fried foods (difficult to digest during inflammation)",
+      "Avoid sugar alcohols (sorbitol, mannitol, xylitol) found in sugar-free products",
+      "Limit dairy if lactose intolerant - use lactose-free alternatives",
+      "Avoid carbonated beverages (gas and bloating)",
+      "Consider liquid nutrition supplements (Ensure, Boost, Kate Farms) if unable to meet caloric needs",
+      "If you have a stricture: avoid fibrous, stringy, or chunky foods that could cause obstruction",
+      "Consult a registered dietitian who specializes in IBD for personalized guidance"
+    ]
+  }
+}

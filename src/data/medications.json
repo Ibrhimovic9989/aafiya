@@ -1,0 +1,200 @@
+{
+  "meta": {
+    "disclaimer": "This information is for educational purposes only and does not constitute medical advice. Always consult your gastroenterologist before starting, stopping, or changing any medication.",
+    "lastUpdated": "2025-12"
+  },
+  "medications": [
+    {
+      "name": "Mesalamine",
+      "brand": "Asacol HD, Pentasa, Lialda, Delzicol, Apriso, Canasa",
+      "class": "Aminosalicylate",
+      "commonDosages": ["800 mg three times daily", "1.2 g once daily (Lialda)", "500 mg four times daily (Pentasa)", "1000 mg rectal suppository at bedtime (Canasa)"],
+      "sideEffects": ["Headache", "Nausea", "Abdominal pain", "Diarrhea", "Rash", "Rare: kidney problems", "Rare: pancreatitis"],
+      "notes": "First-line for mild-to-moderate Crohn's colitis. Less effective for small bowel disease. Requires periodic kidney function monitoring."
+    },
+    {
+      "name": "Sulfasalazine",
+      "brand": "Azulfidine",
+      "class": "Aminosalicylate",
+      "commonDosages": ["500 mg twice daily (starting)", "1-1.5 g twice daily (maintenance)", "Maximum 4 g/day"],
+      "sideEffects": ["Nausea", "Headache", "Loss of appetite", "Rash", "Orange discoloration of urine", "Reversible male infertility", "Rare: blood disorders"],
+      "notes": "Most effective for Crohn's colitis. Take with food. Folic acid supplementation recommended (1 mg/day). Avoid in sulfa allergy."
+    },
+    {
+      "name": "Prednisone",
+      "brand": "Deltasone, Rayos",
+      "class": "Corticosteroid",
+      "commonDosages": ["40-60 mg daily (induction)", "Taper by 5-10 mg/week", "Not for long-term maintenance"],
+      "sideEffects": ["Weight gain", "Moon face", "Insomnia", "Mood changes", "Acne", "Increased blood sugar", "Bone loss (osteoporosis)", "Increased infection risk", "Adrenal suppression", "Cataracts with prolonged use"],
+      "notes": "For moderate-to-severe flares only. Must taper gradually - never stop abruptly. Not a maintenance therapy. Calcium and vitamin D supplementation recommended during use."
+    },
+    {
+      "name": "Budesonide",
+      "brand": "Entocort EC, Uceris",
+      "class": "Corticosteroid",
+      "commonDosages": ["9 mg once daily for 8 weeks (induction)", "6 mg daily for 2 weeks (taper)", "3 mg daily for 2 weeks (taper)", "3-6 mg daily (short-term maintenance)"],
+      "sideEffects": ["Headache", "Nausea", "Upper respiratory infection", "Less systemic side effects than prednisone", "Adrenal suppression (less common)", "Acne"],
+      "notes": "Topically-acting steroid with fewer systemic effects. Entocort targets ileum and right colon. Not effective for left-sided colonic disease."
+    },
+    {
+      "name": "Methylprednisolone",
+      "brand": "Medrol, Solu-Medrol (IV)",
+      "class": "Corticosteroid",
+      "commonDosages": ["40-60 mg IV daily (acute severe flare)", "16-24 mg oral daily", "Dose pack: tapering from 24 mg over 6 days"],
+      "sideEffects": ["Same as prednisone", "Injection site reactions (IV)", "Flushing", "Metallic taste during IV infusion"],
+      "notes": "IV form used for hospitalized patients with severe flares. Oral dose pack sometimes used for short-course treatment."
+    },
+    {
+      "name": "Azathioprine",
+      "brand": "Imuran, Azasan",
+      "class": "Immunomodulator",
+      "commonDosages": ["2-2.5 mg/kg/day", "Typically 100-200 mg daily", "Start low and titrate up over weeks"],
+      "sideEffects": ["Nausea", "Vomiting", "Diarrhea", "Bone marrow suppression (low blood counts)", "Liver toxicity", "Pancreatitis (3-5%)", "Increased infection risk", "Increased lymphoma risk (small)", "Skin cancer risk (use sunscreen)"],
+      "notes": "Takes 3-6 months for full effect. TPMT/NUDT15 enzyme testing required before starting - determines dosing and safety. Regular blood count and liver function monitoring required (every 1-3 months)."
+    },
+    {
+      "name": "6-Mercaptopurine",
+      "brand": "Purinethol, Purixan",
+      "class": "Immunomodulator",
+      "commonDosages": ["1-1.5 mg/kg/day", "Typically 50-100 mg daily"],
+      "sideEffects": ["Same as azathioprine", "Nausea (may be less than azathioprine)", "Bone marrow suppression", "Hepatotoxicity", "Pancreatitis"],
+      "notes": "Active metabolite of azathioprine. Sometimes tolerated when azathioprine is not. Same TPMT testing and monitoring requirements. Avoid allopurinol unless dose-adjusted."
+    },
+    {
+      "name": "Methotrexate",
+      "brand": "Trexall, Otrexup, Rasuvo",
+      "class": "Immunomodulator",
+      "commonDosages": ["25 mg IM/SC once weekly (induction)", "15 mg IM/SC once weekly (maintenance)", "Oral dosing less reliable due to variable absorption"],
+      "sideEffects": ["Nausea", "Fatigue", "Mouth sores", "Liver damage", "Bone marrow suppression", "Pneumonitis (rare)", "Hair thinning"],
+      "notes": "Injection form preferred over oral for Crohn's. Folic acid 1 mg daily (except methotrexate day) reduces side effects. Absolutely contraindicated in pregnancy - effective contraception required. Avoid alcohol. Regular CBC and liver function tests needed."
+    },
+    {
+      "name": "Infliximab",
+      "brand": "Remicade, Inflectra, Renflexis, Avsola (biosimilars)",
+      "class": "Biologic (anti-TNF)",
+      "commonDosages": ["5 mg/kg IV at weeks 0, 2, and 6 (induction)", "5 mg/kg IV every 8 weeks (maintenance)", "Dose escalation to 10 mg/kg or every 4 weeks if needed"],
+      "sideEffects": ["Infusion reactions (fever, chills, rash)", "Headache", "Upper respiratory infections", "Increased infection risk (including TB reactivation)", "Rare: drug-induced lupus", "Rare: demyelinating disease", "Rare: lymphoma", "Rare: heart failure worsening"],
+      "notes": "IV infusion over 2+ hours in a clinic. TB test and hepatitis B screening required before starting. Often combined with an immunomodulator to reduce antibody formation. Therapeutic drug monitoring (trough levels) guides dosing."
+    },
+    {
+      "name": "Adalimumab",
+      "brand": "Humira, Hadlima, Hyrimoz, Cyltezo (biosimilars)",
+      "class": "Biologic (anti-TNF)",
+      "commonDosages": ["160 mg SC at week 0", "80 mg SC at week 2", "40 mg SC every other week (maintenance)", "40 mg SC weekly if needed"],
+      "sideEffects": ["Injection site reactions (redness, pain, swelling)", "Upper respiratory infections", "Headache", "Rash", "Same serious risks as infliximab"],
+      "notes": "Self-injected subcutaneously at home. Pen or prefilled syringe. TB test and hepatitis B screening required. Let pen reach room temperature before injecting to reduce pain. Rotate injection sites."
+    },
+    {
+      "name": "Certolizumab pegol",
+      "brand": "Cimzia",
+      "class": "Biologic (anti-TNF)",
+      "commonDosages": ["400 mg SC at weeks 0, 2, and 4 (induction)", "400 mg SC every 4 weeks (maintenance)"],
+      "sideEffects": ["Injection site reactions", "Upper respiratory infections", "Urinary tract infections", "Rash", "Same serious risks as other anti-TNFs"],
+      "notes": "PEGylated antibody fragment - does not cross placenta, so preferred anti-TNF in pregnancy. No active Fc region so lower risk of some immune effects. Self-injected."
+    },
+    {
+      "name": "Vedolizumab",
+      "brand": "Entyvio",
+      "class": "Biologic (anti-integrin)",
+      "commonDosages": ["300 mg IV at weeks 0, 2, and 6 (induction)", "300 mg IV every 8 weeks (maintenance)", "SC formulation: 108 mg every 2 weeks after IV induction"],
+      "sideEffects": ["Nasopharyngitis", "Headache", "Arthralgia", "Nausea", "Infusion reactions (IV)", "Upper respiratory infections", "Fatigue"],
+      "notes": "Gut-selective - blocks lymphocyte trafficking to gut only. Lower systemic immunosuppression risk. Particularly effective for Crohn's colitis. May take longer to work (up to 14 weeks). No TB test strictly required but often done. SC option available for maintenance."
+    },
+    {
+      "name": "Ustekinumab",
+      "brand": "Stelara",
+      "class": "Biologic (anti-IL-12/23)",
+      "commonDosages": ["Weight-based IV induction: 260 mg (<55 kg), 390 mg (55-85 kg), 520 mg (>85 kg)", "90 mg SC every 8 weeks (maintenance)", "Every 4 weeks if needed"],
+      "sideEffects": ["Nasopharyngitis", "Injection site reactions", "Headache", "Fatigue", "Diarrhea", "Increased infection risk (lower than anti-TNFs)"],
+      "notes": "First IV dose, then self-injected SC at home. Effective for patients who have failed anti-TNF therapy. Good safety profile. TB screening required."
+    },
+    {
+      "name": "Risankizumab",
+      "brand": "Skyrizi",
+      "class": "Biologic (anti-IL-23)",
+      "commonDosages": ["600 mg IV at weeks 0, 4, and 8 (induction)", "360 mg SC at week 12 and every 8 weeks (maintenance)"],
+      "sideEffects": ["Upper respiratory infections", "Headache", "Arthralgia", "Injection site reactions", "Fatigue", "Urinary tract infection"],
+      "notes": "Selective IL-23 inhibitor (does not block IL-12 like ustekinumab). FDA approved for moderate-to-severe Crohn's in 2022. Strong efficacy data including in anti-TNF failures. Favorable safety profile."
+    },
+    {
+      "name": "Tofacitinib",
+      "brand": "Xeljanz",
+      "class": "Small molecule (JAK inhibitor)",
+      "commonDosages": ["5 mg twice daily", "10 mg twice daily (induction, max 16 weeks)", "Extended-release: 11 mg once daily"],
+      "sideEffects": ["Upper respiratory infections", "Headache", "Diarrhea", "Herpes zoster (shingles)", "Elevated cholesterol", "Blood clots (DVT/PE)", "Increased cardiovascular events", "Increased malignancy risk"],
+      "notes": "FDA approved for ulcerative colitis; used off-label in Crohn's. Oral pill - no injections. FDA black box warnings for serious infections, mortality, malignancy, and thrombosis. Avoid in patients >65 or with cardiovascular risk factors."
+    },
+    {
+      "name": "Upadacitinib",
+      "brand": "Rinvoq",
+      "class": "Small molecule (JAK inhibitor)",
+      "commonDosages": ["45 mg once daily for 12 weeks (induction)", "15 mg or 30 mg once daily (maintenance)"],
+      "sideEffects": ["Upper respiratory infections", "Acne", "Herpes zoster", "Elevated creatine kinase", "Elevated liver enzymes", "Neutropenia", "Same black box warnings as tofacitinib"],
+      "notes": "FDA approved for Crohn's disease in 2023. Selective JAK1 inhibitor. Oral tablet. Effective in biologic-experienced patients. Same class warnings as tofacitinib. Shingles vaccine recommended before starting."
+    },
+    {
+      "name": "Metronidazole",
+      "brand": "Flagyl",
+      "class": "Antibiotic",
+      "commonDosages": ["250-500 mg three times daily", "10-20 mg/kg/day", "Typical course: 4-8 weeks for perianal disease"],
+      "sideEffects": ["Nausea", "Metallic taste", "Loss of appetite", "Peripheral neuropathy (with prolonged use)", "Dark urine", "Disulfiram-like reaction with alcohol"],
+      "notes": "Used for perianal Crohn's disease and abscesses/fistulas. Absolutely avoid alcohol during treatment and 48 hours after. Stop if numbness or tingling develops. Not for long-term use."
+    },
+    {
+      "name": "Ciprofloxacin",
+      "brand": "Cipro",
+      "class": "Antibiotic",
+      "commonDosages": ["500 mg twice daily", "Typical course: 4-8 weeks"],
+      "sideEffects": ["Nausea", "Diarrhea", "Tendon rupture/tendinitis (black box warning)", "Peripheral neuropathy", "C. difficile infection", "Photosensitivity", "QT prolongation"],
+      "notes": "Often used with metronidazole for perianal disease. FDA black box warning for tendinitis and tendon rupture - stop at first sign of tendon pain. Avoid in patients taking corticosteroids (increased tendon risk). Take 2 hours before or 6 hours after antacids/iron/calcium."
+    },
+    {
+      "name": "Iron (ferrous sulfate/gluconate/fumarate)",
+      "brand": "Feosol, Slow Fe, Fergon, various",
+      "class": "Supplement",
+      "commonDosages": ["325 mg ferrous sulfate (65 mg elemental iron) daily", "Every other day dosing may improve absorption", "IV iron (Infed, Venofer, Feraheme) if oral not tolerated"],
+      "sideEffects": ["Constipation", "Nausea", "Stomach cramps", "Dark stools", "Metallic taste"],
+      "notes": "Iron deficiency anemia is very common in Crohn's. Take with vitamin C to enhance absorption. Avoid taking with dairy, tea, coffee, or calcium. IV iron preferred if oral not tolerated or in active inflammation."
+    },
+    {
+      "name": "Vitamin D (cholecalciferol)",
+      "brand": "Various OTC, Drisdol (ergocalciferol Rx)",
+      "class": "Supplement",
+      "commonDosages": ["1000-2000 IU daily (maintenance)", "50,000 IU weekly for 8-12 weeks (deficiency repletion)", "Target 25-OH vitamin D level: 30-50 ng/mL"],
+      "sideEffects": ["Generally well tolerated", "Hypercalcemia at very high doses", "Nausea at high doses"],
+      "notes": "Deficiency extremely common in Crohn's (up to 70%). Important for bone health, immune function, and disease activity. D3 (cholecalciferol) preferred over D2. Check levels at least annually."
+    },
+    {
+      "name": "Vitamin B12 (cyanocobalamin/methylcobalamin)",
+      "brand": "Various OTC, Nascobal (nasal)",
+      "class": "Supplement",
+      "commonDosages": ["1000 mcg IM monthly (if ileal resection)", "1000-2000 mcg sublingual daily", "1000 mcg IM daily for 7 days then weekly for 4 weeks (repletion)"],
+      "sideEffects": ["Generally well tolerated", "Injection site pain", "Mild diarrhea"],
+      "notes": "Absorbed in the terminal ileum - deficiency common with ileal disease or resection. Sublingual or IM injection bypasses gut absorption issues. Monitor levels annually, more often after ileal resection."
+    },
+    {
+      "name": "Folic acid",
+      "brand": "Various OTC",
+      "class": "Supplement",
+      "commonDosages": ["1 mg daily (general supplementation)", "1 mg daily (mandatory with sulfasalazine)", "5 mg weekly (day after methotrexate)"],
+      "sideEffects": ["Generally well tolerated", "May mask B12 deficiency at high doses"],
+      "notes": "Required supplementation with sulfasalazine and methotrexate. Important for cell division and preventing anemia. Check B12 before starting high-dose folic acid."
+    },
+    {
+      "name": "Calcium (calcium carbonate/citrate)",
+      "brand": "Caltrate, Citracal, Tums, various",
+      "class": "Supplement",
+      "commonDosages": ["500-600 mg twice daily", "Total intake goal: 1000-1200 mg/day (food + supplements)", "Calcium citrate preferred if on acid-reducing medications"],
+      "sideEffects": ["Constipation", "Gas", "Bloating", "Kidney stones (rare, with excessive doses)"],
+      "notes": "Essential for bone health, especially with steroid use. Calcium citrate better absorbed than carbonate and does not require stomach acid. Take with vitamin D. Space doses throughout the day (absorb max 500 mg at once). Do not take with iron supplements."
+    },
+    {
+      "name": "Probiotics",
+      "brand": "VSL#3, Visbiome, Culturelle, Align, Florastor",
+      "class": "Supplement",
+      "commonDosages": ["Varies by product", "VSL#3/Visbiome: 1-2 packets daily (450-900 billion CFU)", "Culturelle (L. rhamnosus GG): 1 capsule daily (10 billion CFU)", "Saccharomyces boulardii: 250-500 mg twice daily"],
+      "sideEffects": ["Gas", "Bloating (usually temporary)", "Rare: bacteremia in immunocompromised patients"],
+      "notes": "Evidence strongest for VSL#3 in pouchitis prevention. Limited evidence for Crohn's specifically, but often tried. Discuss with your doctor, especially if immunosuppressed. Saccharomyces boulardii may help prevent C. difficile. Refrigeration required for many products."
+    }
+  ]
+}

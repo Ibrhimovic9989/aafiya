@@ -1,0 +1,291 @@
+{
+  "meta": {
+    "source": "Nutrients 2025; PMC12638057",
+    "method": "GINI importance from random-forest classifier",
+    "totalCompounds": 35,
+    "remissionAssociated": 29,
+    "flareAssociated": 6
+  },
+  "compounds": [
+    {
+      "name": "Butyric acid (4:0)",
+      "class": "fatty acid",
+      "riskRank": 1,
+      "direction": "remission",
+      "typicalIntakeMg": 3200,
+      "foodSources": ["butter", "cheese", "whole milk", "ghee", "cream"]
+    },
+    {
+      "name": "Capric acid (10:0)",
+      "class": "fatty acid",
+      "riskRank": 2,
+      "direction": "remission",
+      "typicalIntakeMg": 600,
+      "foodSources": ["coconut oil", "palm kernel oil", "milk", "goat cheese"]
+    },
+    {
+      "name": "Molybdenum",
+      "class": "trace element",
+      "riskRank": 3,
+      "direction": "flare",
+      "typicalIntakeMg": 0.045,
+      "foodSources": ["legumes", "grains", "organ meats", "nuts", "leafy greens"]
+    },
+    {
+      "name": "Caproic acid (6:0)",
+      "class": "fatty acid",
+      "riskRank": 4,
+      "direction": "remission",
+      "typicalIntakeMg": 450,
+      "foodSources": ["butter", "cheese", "coconut oil", "cream"]
+    },
+    {
+      "name": "Undecanoic acid (11:0)",
+      "class": "fatty acid",
+      "riskRank": 5,
+      "direction": "remission",
+      "typicalIntakeMg": 20,
+      "foodSources": ["butter", "coconut", "milk fat"]
+    },
+    {
+      "name": "Cellobiose",
+      "class": "cellulose fiber",
+      "riskRank": 6,
+      "direction": "flare",
+      "typicalIntakeMg": 150,
+      "foodSources": ["raw vegetables", "whole grains", "bran", "celery", "lettuce"]
+    },
+    {
+      "name": "Myristic acid (14:0)",
+      "class": "fatty acid",
+      "riskRank": 7,
+      "direction": "remission",
+      "typicalIntakeMg": 8500,
+      "foodSources": ["coconut oil", "butter", "cheese", "palm kernel oil", "cream"]
+    },
+    {
+      "name": "Pentadecanoic acid (15:0)",
+      "class": "fatty acid",
+      "riskRank": 8,
+      "direction": "remission",
+      "typicalIntakeMg": 300,
+      "foodSources": ["milk fat", "butter", "cheese", "yogurt"]
+    },
+    {
+      "name": "Margaric acid (17:0)",
+      "class": "fatty acid",
+      "riskRank": 9,
+      "direction": "remission",
+      "typicalIntakeMg": 350,
+      "foodSources": ["animal fats", "dairy products", "mutton", "beef tallow"]
+    },
+    {
+      "name": "Kaempferol-3-glucoside",
+      "class": "flavonoid",
+      "riskRank": 10,
+      "direction": "flare",
+      "typicalIntakeMg": 4,
+      "foodSources": ["tea", "broccoli", "kale", "spinach", "beans"]
+    },
+    {
+      "name": "Palmitic acid (16:0)",
+      "class": "fatty acid",
+      "riskRank": 11,
+      "direction": "remission",
+      "typicalIntakeMg": 20000,
+      "foodSources": ["palm oil", "meat", "cheese", "butter", "cocoa butter"]
+    },
+    {
+      "name": "Stearic acid (18:0)",
+      "class": "fatty acid",
+      "riskRank": 12,
+      "direction": "remission",
+      "typicalIntakeMg": 7000,
+      "foodSources": ["cocoa butter", "animal fats", "shea butter", "beef", "chocolate"]
+    },
+    {
+      "name": "Palmitoleic acid (16:1)",
+      "class": "fatty acid",
+      "riskRank": 13,
+      "direction": "remission",
+      "typicalIntakeMg": 1800,
+      "foodSources": ["macadamia nuts", "sea buckthorn oil", "cod liver oil", "salmon"]
+    },
+    {
+      "name": "Myristoleic acid (14:1)",
+      "class": "fatty acid",
+      "riskRank": 14,
+      "direction": "remission",
+      "typicalIntakeMg": 100,
+      "foodSources": ["whale fat", "butter", "milk fat", "beef fat"]
+    },
+    {
+      "name": "Trans-11-docosenoic acid (22:1)",
+      "class": "fatty acid",
+      "riskRank": 15,
+      "direction": "flare",
+      "typicalIntakeMg": 500,
+      "foodSources": ["fish oils", "mustard seed oil", "rapeseed oil"]
+    },
+    {
+      "name": "Cis-4-decenoic acid (10:1)",
+      "class": "fatty acid",
+      "riskRank": 16,
+      "direction": "remission",
+      "typicalIntakeMg": 50,
+      "foodSources": ["milk fat", "butter", "cream"]
+    },
+    {
+      "name": "Cis-4-dodecenoic acid (12:1)",
+      "class": "fatty acid",
+      "riskRank": 17,
+      "direction": "remission",
+      "typicalIntakeMg": 40,
+      "foodSources": ["milk fat", "butter", "cream"]
+    },
+    {
+      "name": "Cis+trans-9-hexadecenoic acid (16:1)",
+      "class": "fatty acid",
+      "riskRank": 18,
+      "direction": "remission",
+      "typicalIntakeMg": 1500,
+      "foodSources": ["animal fats", "beef", "pork", "dairy products"]
+    },
+    {
+      "name": "Trans-11-octadecenoic acid (18:1)",
+      "class": "fatty acid",
+      "riskRank": 19,
+      "direction": "remission",
+      "typicalIntakeMg": 2000,
+      "foodSources": ["dairy products", "ruminant fats", "beef", "lamb", "butter"]
+    },
+    {
+      "name": "Acetylglycine",
+      "class": "amino acid derivative",
+      "riskRank": 20,
+      "direction": "flare",
+      "typicalIntakeMg": 5,
+      "foodSources": ["processed foods", "cured meats", "fermented foods"]
+    },
+    {
+      "name": "Elaidic acid (18:1 trans-9)",
+      "class": "fatty acid",
+      "riskRank": 21,
+      "direction": "remission",
+      "typicalIntakeMg": 3000,
+      "foodSources": ["partially hydrogenated oils", "margarine", "shortening", "fried foods"]
+    },
+    {
+      "name": "Linoleic acid (18:2)",
+      "class": "fatty acid",
+      "riskRank": 22,
+      "direction": "remission",
+      "typicalIntakeMg": 15000,
+      "foodSources": ["sunflower oil", "safflower oil", "corn oil", "soybean oil", "walnuts"]
+    },
+    {
+      "name": "Trans+cis linoleic acid (18:2)",
+      "class": "fatty acid",
+      "riskRank": 23,
+      "direction": "remission",
+      "typicalIntakeMg": 14000,
+      "foodSources": ["vegetable oils", "seeds", "nuts", "soybean oil"]
+    },
+    {
+      "name": "Remainder linoleic acid (18:2)",
+      "class": "fatty acid",
+      "riskRank": 24,
+      "direction": "remission",
+      "typicalIntakeMg": 1000,
+      "foodSources": ["vegetable oils", "mixed seed oils", "processed foods"]
+    },
+    {
+      "name": "Kaempferol-3-O-acetyl-glucoside",
+      "class": "flavonoid",
+      "riskRank": 25,
+      "direction": "flare",
+      "typicalIntakeMg": 1.5,
+      "foodSources": ["tea", "fruits", "kale", "endive", "leeks"]
+    },
+    {
+      "name": "Linolelaidic acid (18:2 trans)",
+      "class": "fatty acid",
+      "riskRank": 26,
+      "direction": "remission",
+      "typicalIntakeMg": 600,
+      "foodSources": ["processed foods", "margarine", "shortening", "baked goods"]
+    },
+    {
+      "name": "Linolenic acid (18:3)",
+      "class": "fatty acid",
+      "riskRank": 27,
+      "direction": "remission",
+      "typicalIntakeMg": 1600,
+      "foodSources": ["flaxseed", "walnuts", "chia seeds", "hemp seeds", "canola oil"]
+    },
+    {
+      "name": "Gamma-linolenic acid (18:3 n-6)",
+      "class": "fatty acid",
+      "riskRank": 28,
+      "direction": "remission",
+      "typicalIntakeMg": 40,
+      "foodSources": ["borage oil", "evening primrose oil", "black currant seed oil", "hemp seeds"]
+    },
+    {
+      "name": "Eicosadienoic acid (20:2)",
+      "class": "fatty acid",
+      "riskRank": 29,
+      "direction": "remission",
+      "typicalIntakeMg": 30,
+      "foodSources": ["fish", "meat", "shellfish", "liver"]
+    },
+    {
+      "name": "Tetracosadienoic acid (24:2)",
+      "class": "fatty acid",
+      "riskRank": 30,
+      "direction": "remission",
+      "typicalIntakeMg": 5,
+      "foodSources": ["animal fats", "brain tissue", "organ meats"]
+    },
+    {
+      "name": "4-Hydroxyproline",
+      "class": "amino acid derivative",
+      "riskRank": 31,
+      "direction": "remission",
+      "typicalIntakeMg": 500,
+      "foodSources": ["bone broth", "gelatin", "collagen supplements", "pork skin", "chicken feet"]
+    },
+    {
+      "name": "Ethanol",
+      "class": "alcohol",
+      "riskRank": 32,
+      "direction": "remission",
+      "typicalIntakeMg": 14000,
+      "foodSources": ["beer", "wine", "spirits", "fermented beverages"]
+    },
+    {
+      "name": "Vanillin",
+      "class": "phenolic aldehyde",
+      "riskRank": 33,
+      "direction": "remission",
+      "typicalIntakeMg": 10,
+      "foodSources": ["vanilla extract", "chocolate", "baked goods", "coffee"]
+    },
+    {
+      "name": "Heptadecanoyl carnitine",
+      "class": "acylcarnitine",
+      "riskRank": 34,
+      "direction": "remission",
+      "typicalIntakeMg": 0.5,
+      "foodSources": ["red meat", "lamb", "venison", "beef"]
+    },
+    {
+      "name": "Haem iron",
+      "class": "mineral",
+      "riskRank": 35,
+      "direction": "remission",
+      "typicalIntakeMg": 7,
+      "foodSources": ["red meat", "liver", "poultry", "shellfish", "dark-meat turkey"]
+    }
+  ]
+}

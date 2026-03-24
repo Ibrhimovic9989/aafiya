@@ -1,0 +1,568 @@
+// ═══════════════════════════════════════════════════════════════════
+// Aafiya — Prisma Schema (Supabase PostgreSQL)
+// GDPR/DPDA compliant: userId scoping, audit logging, consent tracking
+// ═══════════════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Auth (NextAuth v5) ──────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+
+  // App data
+  profile            UserProfile?
+  symptoms           SymptomEntry[]
+  foodEntries        FoodEntry[]
+  sleepEntries       SleepEntry[]
+  medications        MedicationEntry[]
+  cycleEntries       CycleEntry[]
+  moodEntries        MoodEntry[]
+  experiments        Experiment[]
+  flareRisks         FlareRiskEntry[]
+  chatMessages       ChatMessage[]
+  triggers           PersonalTrigger[]
+  predictionFeedback PredictionFeedback[]
+  learnedWeights     LearnedWeights?
+  insights           PersonalInsight[]
+
+  // Privacy/Compliance
+  consentRecords ConsentRecord[]
+  auditLogs      AuditLog[]
+
+  // Scheduling & Notifications
+  scheduledTasks    ScheduledTask[]
+  pushSubscriptions PushSubscription[]
+  notificationLogs  NotificationLog[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ── User Profile ────────────────────────────────────────────────
+
+model UserProfile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  name               String   @default("")
+  conditionId        String   @default("crohns")
+  diagnosis          String   @default("") // @encrypted
+  diseaseLocation    String   @default("")
+  medications        Json     @default("[]") // String[]
+  targetBedtime      String   @default("22:00")
+  targetWakeTime     String   @default("07:00")
+  cycleStartDate     String   @default("")
+  cycleLength        Int      @default(28)
+  doctorName         String   @default("") // @encrypted
+  doctorContact      String   @default("") // @encrypted
+  onboardingComplete Boolean  @default(false)
+  trackCycle         Boolean  @default(true)
+
+  // Notification preferences
+  notificationsEnabled Boolean @default(true)
+  pushEnabled          Boolean @default(true)
+  emailDigest          String  @default("none") // none | daily | weekly
+  quietHoursStart      String  @default("23:00")
+  quietHoursEnd        String  @default("07:00")
+  reminderLeadMinutes  Int     @default(15) // How early to send reminders before window
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ── Symptom Tracking ────────────────────────────────────────────
+
+model SymptomEntry {
+  id        String @id @default(cuid())
+  userId    String
+  date      String
+  timestamp BigInt
+
+  conditionId String?
+
+  // Universal
+  generalWellbeing Int     @default(0)
+  painLevel        Int     @default(0)
+  fatigue          Int     @default(0)
+  fever            Boolean @default(false)
+  complications    Json    @default("[]")
+
+  // Disease activity
+  activityScore     Float?
+  secondaryScore    Float?
+  scoringComponents Json?
+
+  // GI-specific
+  painLocation   String?
+  liquidStools   Int?
+  abdominalMass  Int?
+  bowelFrequency Int?
+  bristolScale   Int?
+  blood          String?
+  urgency        Int?
+  nausea         Int?
+
+  // Joint-specific
+  jointPain        Int?
+  morningStiffness Int?
+  swollenJoints    Int?
+  tenderJoints     Int?
+
+  // Skin-specific
+  skinSeverity     Int?
+  bodyAreaAffected Int?
+  itching          Int?
+
+  // Neuro-specific
+  numbnessTingling  Int?
+  visionIssues      Int?
+  balanceIssues     Int?
+  cognitiveFunction Int?
+
+  // Endocrine-specific
+  coldSensitivity Int?
+  weightChange    Int?
+  bloodSugar      Float?
+  insulinDoses    Int?
+
+  // Legacy
+  hbiScore     Int @default(0)
+  cdaiEstimate Int @default(0)
+
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId, timestamp])
+}
+
+// ── Food Tracking ───────────────────────────────────────────────
+
+model FoodEntry {
+  id        String @id @default(cuid())
+  userId    String
+  date      String
+  timestamp BigInt
+
+  mealType      String
+  description   String  @default("") // @encrypted
+  skipped       Boolean @default(false)
+  foodItems     Json    @default("[]")
+  compounds     Json?
+  mealRisk      String?
+  firstMealTime String?
+  lastMealTime  String?
+  notes         String  @default("")
+
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId, timestamp])
+}
+
+// ── Sleep Tracking ──────────────────────────────────────────────
+
+model SleepEntry {
+  id     String @id @default(cuid())
+  userId String
+  date   String
+
+  bedtime             String
+  wakeTime            String
+  duration            Int
+  quality             Int
+  socialJetLagMinutes Int     @default(0)
+  circadianScore      Int     @default(0)
+  targetBedtime       String  @default("22:00")
+  metTarget           Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+// ── Medication Tracking ─────────────────────────────────────────
+
+model MedicationEntry {
+  id     String @id @default(cuid())
+  userId String
+  date   String
+
+  medication String // @encrypted
+  dosage     String  @default("")
+  taken      Boolean @default(false)
+  time       String  @default("")
+  notes      String  @default("")
+
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+// ── Cycle Tracking ──────────────────────────────────────────────
+
+model CycleEntry {
+  id     String @id @default(cuid())
+  userId String
+  date   String
+
+  cycleDay      Int
+  phase         String
+  flowIntensity Int    @default(0)
+  pain          Int    @default(0)
+  notes         String @default("")
+
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+// ── Mood Tracking ───────────────────────────────────────────────
+
+model MoodEntry {
+  id        String @id @default(cuid())
+  userId    String
+  date      String
+  timestamp BigInt
+
+  mood    Int    @default(5)
+  energy  Int    @default(5)
+  stress  Int    @default(3)
+  anxiety Int    @default(3)
+  notes   String @default("") // @encrypted
+
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId, timestamp])
+}
+
+// ── N-of-1 Experiments ──────────────────────────────────────────
+
+model Experiment {
+  id     String @id @default(cuid())
+  userId String
+
+  title            String
+  hypothesis       String
+  variable         String
+  startDate        String
+  endDate          String
+  baselineDays     Int
+  interventionDays Int
+  status           String @default("baseline")
+  result           Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+}
+
+// ── Flare Risk ──────────────────────────────────────────────────
+
+model FlareRiskEntry {
+  id     String @id @default(cuid())
+  userId String
+  date   String
+
+  score          Int
+  level          String
+  factors        Json
+  recommendation String
+
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+// ── AI Chat ─────────────────────────────────────────────────────
+
+model ChatMessage {
+  id        String @id @default(cuid())
+  userId    String
+  timestamp BigInt
+
+  role    String
+  content String @db.Text // @encrypted
+
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, timestamp])
+}
+
+// ── Self-Learning: Personal Triggers ────────────────────────────
+
+model PersonalTrigger {
+  id     String @id @default(cuid())
+  userId String
+
+  discoveredAt      BigInt
+  factor            String
+  factorType        String
+  direction         String
+  correlation       Float
+  confidence        Int
+  sampleSize        Int
+  avgSymptomWith    Float
+  avgSymptomWithout Float
+  detail            String
+  confirmed         Boolean @default(false)
+  dismissed         Boolean @default(false)
+  lastUpdated       BigInt
+
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, confirmed])
+  @@index([userId, dismissed])
+}
+
+// ── Self-Learning: Prediction Feedback ──────────────────────────
+
+model PredictionFeedback {
+  id     String @id @default(cuid())
+  userId String
+  date   String
+
+  predictedLevel String
+  predictedScore Int
+  actualOutcome  String
+  accurate       Boolean
+  factors        Json
+  timestamp      BigInt
+
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId, timestamp])
+}
+
+// ── Self-Learning: Learned Weights ──────────────────────────────
+
+model LearnedWeights {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  symptomTrend        Float @default(25)
+  circadianDisruption Float @default(20)
+  dietaryRisk         Float @default(15)
+  menstrualPhase      Float @default(15)
+  stressMood          Float @default(10)
+  medicationAdherence Float @default(10)
+  mealTiming          Float @default(5)
+  totalPredictions    Int   @default(0)
+  correctPredictions  Int   @default(0)
+  accuracy            Float @default(0)
+  lastUpdated         BigInt @default(0)
+
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ── Self-Learning: Personal Insights ────────────────────────────
+
+model PersonalInsight {
+  id     String @id @default(cuid())
+  userId String
+
+  generatedAt BigInt
+  type        String
+  title       String
+  body        String @db.Text
+  data        Json?
+  read        Boolean @default(false)
+  actionable  Boolean @default(false)
+  action      String?
+
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, generatedAt])
+  @@index([userId, type])
+  @@index([userId, read])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GDPR / DPDA Compliance
+// ═══════════════════════════════════════════════════════════════
+
+model ConsentRecord {
+  id     String @id @default(cuid())
+  userId String
+
+  purpose   String // health_data_processing | ai_analysis | data_storage | analytics
+  granted   Boolean
+  version   String   @default("1.0")
+  ipAddress String?
+  userAgent String?
+  grantedAt DateTime @default(now())
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+}
+
+model AuditLog {
+  id     String @id @default(cuid())
+  userId String
+
+  action    String // create | read | update | delete | export | login | consent_change
+  entity    String
+  entityId  String?
+  details   String? @db.Text
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, timestamp])
+  @@index([userId, action])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Scheduling & Notifications
+// ═══════════════════════════════════════════════════════════════
+
+model ScheduledTask {
+  id     String @id @default(cuid())
+  userId String
+
+  // What kind of task
+  type       String   // checkin_reminder | followup | medication_reminder | experiment_check | custom
+  checkinId  String?  // Links to DAILY_SCHEDULE item id (e.g. 'morning_sleep', 'breakfast')
+  title      String
+  body       String   @default("")
+  priority   String   @default("medium") // high | medium | low
+
+  // When to fire
+  scheduledFor DateTime
+  timezone     String   @default("Asia/Kolkata")
+
+  // Recurrence (null = one-shot)
+  recurrence   String?  // daily | weekly | custom_cron
+  cronExpr     String?  // For custom: "0 8 * * *"
+  recurrenceEnd DateTime?
+
+  // State
+  status       String   @default("pending") // pending | sent | snoozed | dismissed | expired | failed
+  snoozedUntil DateTime?
+  attempts     Int      @default(0)
+  maxAttempts  Int      @default(3)
+  lastAttempt  DateTime?
+  completedAt  DateTime?
+
+  // Context for follow-ups
+  triggerEvent String?  // What caused this task: "symptom_logged", "flare_risk_high", "experiment_phase_change"
+  triggerData  Json?    // Extra context from the trigger event
+  parentTaskId String?  // Chain follow-ups to their parent
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([userId, scheduledFor])
+  @@index([status, scheduledFor])
+}
+
+model PushSubscription {
+  id     String @id @default(cuid())
+  userId String
+
+  endpoint String @db.Text
+  p256dh   String // Public key
+  auth     String // Auth secret
+  userAgent String?
+
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, endpoint])
+  @@index([userId, active])
+}
+
+model NotificationLog {
+  id     String @id @default(cuid())
+  userId String
+
+  taskId    String?  // Which ScheduledTask triggered this (null for ad-hoc)
+  channel   String   // push | in_app | email
+  title     String
+  body      String
+  status    String   // sent | delivered | clicked | failed | dismissed
+  errorMsg  String?
+
+  sentAt    DateTime @default(now())
+  readAt    DateTime?
+  clickedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sentAt])
+  @@index([userId, channel])
+  @@index([taskId])
+}
