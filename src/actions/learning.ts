@@ -390,8 +390,8 @@ export async function getPersonalTriggersForAgentAction(): Promise<string> {
   if (triggers.length === 0) return '';
 
   let context = '\n\nPERSONAL TRIGGERS (discovered from their data):';
-  const confirmed = triggers.filter(t => t.confirmed);
-  const suspected = triggers.filter(t => !t.confirmed && t.confidence > 50);
+  const confirmed = triggers.filter((t: any) => t.confirmed);
+  const suspected = triggers.filter((t: any) => !t.confirmed && t.confidence > 50);
 
   if (confirmed.length > 0) {
     context += '\nConfirmed:';
