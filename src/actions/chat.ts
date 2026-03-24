@@ -30,7 +30,7 @@ export async function getChatHistory() {
     where: { userId: user.id },
     orderBy: { timestamp: 'asc' },
   });
-  return messages.map(m => ({
+  return messages.map((m: any) => ({
     ...decryptFields(m, ['content']),
     timestamp: Number(m.timestamp),
     role: m.role as 'user' | 'assistant',
