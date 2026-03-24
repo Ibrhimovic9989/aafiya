@@ -50,8 +50,8 @@ export default function TriggersPage() {
         }
       }
       const topWarnings = Array.from(warningMap.entries())
-        .map(([compound, count]) => ({ compound, count }))
-        .sort((a, b) => b.count - a.count)
+        .map(([compound, count]: [any, any]) => ({ compound, count }))
+        .sort((a: any, b: any) => b.count - a.count)
         .slice(0, 8);
 
       // Food-HBI correlation (if enough data)
@@ -85,7 +85,7 @@ export default function TriggersPage() {
           }
         }
 
-        foodCorrelations.sort((a, b) => b.avgNextDayHBI - a.avgNextDayHBI);
+        foodCorrelations.sort((a: any, b: any) => b.avgNextDayHBI - a.avgNextDayHBI);
       }
 
       setAnalysis({

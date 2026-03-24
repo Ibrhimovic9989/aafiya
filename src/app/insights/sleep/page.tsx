@@ -71,26 +71,26 @@ export default function SleepAnalysisPage() {
       const targetBedtime = profile?.targetBedtime || '22:00';
       const targetWakeTime = profile?.targetWakeTime || '07:00';
 
-      sleep.sort((a, b) => a.date.localeCompare(b.date));
+      sleep.sort((a: any, b: any) => a.date.localeCompare(b.date));
 
-      const circadianTrend = sleep.map(s => ({
+      const circadianTrend = sleep.map((s: any) => ({
         date: s.date,
         label: new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         score: s.circadianScore,
       }));
 
-      const avgJetLag = mean(sleep.map(s => s.socialJetLagMinutes));
-      const avgCircadian = mean(sleep.map(s => s.circadianScore));
+      const avgJetLag = mean(sleep.map((s: any) => s.socialJetLagMinutes));
+      const avgCircadian = mean(sleep.map((s: any) => s.circadianScore));
 
-      const bedtimes = sleep.map(s => ({
+      const bedtimes = sleep.map((s: any) => ({
         date: s.date,
         label: new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         minutes: timeToMinutes(s.bedtime),
       }));
 
       // This week's data
-      const thisWeekSleep = sleep.filter(s => s.date >= weekAgo);
-      const weekActualBedtimes = thisWeekSleep.map(s => timeToMinutes(s.bedtime));
+      const thisWeekSleep = sleep.filter((s: any) => s.date >= weekAgo);
+      const weekActualBedtimes = thisWeekSleep.map((s: any) => timeToMinutes(s.bedtime));
       const weekActualAvgMin = weekActualBedtimes.length > 0 ? mean(weekActualBedtimes) : 0;
 
       // Calculate weeks since first entry for progressive target

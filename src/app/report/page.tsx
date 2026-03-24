@@ -63,26 +63,26 @@ export default function ReportPage() {
     ]);
 
     // HBI
-    const hbiScores = symptoms.map(s => s.hbiScore);
+    const hbiScores = symptoms.map((s: any) => s.hbiScore);
     const hbiAvg = hbiScores.length > 0 ? mean(hbiScores) : 0;
     const hbiMin = hbiScores.length > 0 ? Math.min(...hbiScores) : 0;
     const hbiMax = hbiScores.length > 0 ? Math.max(...hbiScores) : 0;
 
     // CDAI
-    const cdaiScores = hbiScores.map(h => estimateCDAI(h));
+    const cdaiScores = hbiScores.map((h: any) => estimateCDAI(h));
     const cdaiAvg = cdaiScores.length > 0 ? mean(cdaiScores) : 0;
 
     // Medication adherence
-    const medTaken = meds.filter(m => m.taken).length;
+    const medTaken = meds.filter((m: any) => m.taken).length;
     const medPct = meds.length > 0 ? (medTaken / meds.length) * 100 : 0;
 
     // Sleep
-    const avgCircadian = sleep.length > 0 ? mean(sleep.map(s => s.circadianScore)) : 0;
-    const avgDuration = sleep.length > 0 ? mean(sleep.map(s => s.duration)) : 0;
-    const avgJetLag = sleep.length > 0 ? mean(sleep.map(s => s.socialJetLagMinutes)) : 0;
+    const avgCircadian = sleep.length > 0 ? mean(sleep.map((s: any) => s.circadianScore)) : 0;
+    const avgDuration = sleep.length > 0 ? mean(sleep.map((s: any) => s.duration)) : 0;
+    const avgJetLag = sleep.length > 0 ? mean(sleep.map((s: any) => s.socialJetLagMinutes)) : 0;
 
     // Food triggers
-    const highRisk = food.filter(f => f.mealRisk === 'high').length;
+    const highRisk = food.filter((f: any) => f.mealRisk === 'high').length;
     const compoundMap = new Map<string, number>();
     for (const f of food) {
       if (f.compounds?.riskCompounds) {
@@ -94,15 +94,15 @@ export default function ReportPage() {
       }
     }
     const topCompounds = Array.from(compoundMap.entries())
-      .sort((a, b) => b[1] - a[1])
+      .sort((a: any, b: any) => b[1] - a[1])
       .slice(0, 5)
-      .map(([name]) => name);
+      .map(([name]: any) => name);
 
     // Cycle
     let cycleData = null;
     if (cycle.length > 0) {
       const phaseHBI: Record<string, number[]> = {};
-      const symptomByDate = new Map(symptoms.map(s => [s.date, s.hbiScore]));
+      const symptomByDate = new Map(symptoms.map((s: any) => [s.date, s.hbiScore]));
       for (const c of cycle) {
         const hbi = symptomByDate.get(c.date);
         if (hbi !== undefined) {
@@ -111,15 +111,15 @@ export default function ReportPage() {
         }
       }
       const worst = Object.entries(phaseHBI)
-        .map(([phase, scores]) => ({ phase, avg: mean(scores) }))
-        .sort((a, b) => b.avg - a.avg)[0];
+        .map(([phase, scores]: [any, any]) => ({ phase, avg: mean(scores) }))
+        .sort((a: any, b: any) => b.avg - a.avg)[0];
       cycleData = { entries: cycle.length, worstPhase: worst?.phase || 'N/A' };
     }
 
     // Experiments
     const completedExps = experiments
-      .filter(e => e.result)
-      .map(e => ({
+      .filter((e: any) => e.result)
+      .map((e: any) => ({
         title: e.title,
         result: e.result!.conclusion.substring(0, 120) + '...',
         significant: e.result!.statisticalSignificance,

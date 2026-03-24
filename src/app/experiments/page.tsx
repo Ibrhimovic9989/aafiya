@@ -40,7 +40,7 @@ export default function ExperimentsPage() {
   useEffect(() => {
     async function load() {
       const all = await getExperiments();
-      all.sort((a, b) => b.startDate.localeCompare(a.startDate));
+      all.sort((a: any, b: any) => b.startDate.localeCompare(a.startDate));
       setExperiments(all);
       setLoading(false);
     }
@@ -111,7 +111,7 @@ export default function ExperimentsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {experiments.map(exp => {
+          {experiments.map((exp: any) => {
             const config = statusConfig[exp.status] || statusConfig.completed;
             const progress = getProgress(exp);
             return (

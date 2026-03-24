@@ -179,7 +179,7 @@ export default function PrivacyPage() {
           <p className="text-sm font-semibold text-text-primary mb-3">Recent Activity Log</p>
           <Card padding="sm">
             <div className="max-h-40 overflow-y-auto space-y-1">
-              {auditLogs.map(log => (
+              {auditLogs.map((log: any) => (
                 <div key={log.id} className="flex items-center gap-2 text-[10px]">
                   <span className="text-text-quaternary">{new Date(log.timestamp).toLocaleString()}</span>
                   <span className={`px-1 py-0.5 rounded text-[9px] font-medium ${

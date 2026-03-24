@@ -36,7 +36,7 @@ export default function FlareTimelinePage() {
 
       const symptoms = await getSymptomsByDateRange(monthAgo, today + '\uffff');
 
-      symptoms.sort((a, b) => a.date.localeCompare(b.date));
+      symptoms.sort((a: any, b: any) => a.date.localeCompare(b.date));
 
       // Group by date, take last entry per day
       const byDate = new Map<string, SymptomEntry>();
@@ -47,7 +47,7 @@ export default function FlareTimelinePage() {
       const points: ChartPoint[] = [];
       const notable: typeof events = [];
 
-      const entries = Array.from(byDate.entries()).sort(([a], [b]) => a.localeCompare(b));
+      const entries = Array.from(byDate.entries()).sort(([a]: any, [b]: any) => a.localeCompare(b));
       let prevScore: number | null = null;
 
       for (const [date, entry] of entries) {

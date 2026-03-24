@@ -49,7 +49,7 @@ export default function MedsLoggerPage() {
         const today = new Date().toISOString().split('T')[0];
         const weekMeds = await getMedicationsByDateRange(weekAgo, today);
         if (weekMeds.length > 0) {
-          const taken = weekMeds.filter(m => m.taken).length;
+          const taken = weekMeds.filter((m: any) => m.taken).length;
           setWeeklyAdherence(Math.round((taken / weekMeds.length) * 100));
         }
       } catch {

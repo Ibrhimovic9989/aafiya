@@ -37,16 +37,16 @@ export default function InsightsPage() {
       ]);
 
       const flareTimeline = symptoms.length > 0
-        ? `Avg HBI: ${mean(symptoms.map(s => s.hbiScore)).toFixed(1)} over ${symptoms.length} entries`
+        ? `Avg HBI: ${mean(symptoms.map((s: any) => s.hbiScore)).toFixed(1)} over ${symptoms.length} entries`
         : 'No symptom data yet';
 
-      const highRisk = food.filter(f => f.mealRisk === 'high').length;
+      const highRisk = food.filter((f: any) => f.mealRisk === 'high').length;
       const triggers = food.length > 0
         ? `${highRisk} high-risk meals of ${food.length} logged`
         : 'No food data yet';
 
       const sleepPreview = sleep.length > 0
-        ? `Avg circadian score: ${mean(sleep.map(s => s.circadianScore)).toFixed(0)}%`
+        ? `Avg circadian score: ${mean(sleep.map((s: any) => s.circadianScore)).toFixed(0)}%`
         : 'No sleep data yet';
 
       const cyclePreview = cycle.length > 0

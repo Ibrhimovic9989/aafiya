@@ -340,7 +340,7 @@ export default function AafiyaAgent() {
       if (!p?.onboardingComplete) { router.push('/onboarding'); return; }
 
       const history = await getChatHistory();
-      const mapped: AgentMessage[] = history.map(h => ({
+      const mapped: AgentMessage[] = history.map((h: any) => ({
         id: h.id, role: h.role === 'assistant' ? 'aafiya' : 'user', text: h.content, timestamp: h.timestamp,
       }));
       setMessages(mapped);
@@ -419,10 +419,10 @@ export default function AafiyaAgent() {
       getMoodByDateRange(weekAgo, today + '\uffff'),
     ]);
     let ctx = '';
-    if (symptoms.length) ctx += `Recent symptoms: ${symptoms.slice(-3).map(s => `${s.date}: HBI=${s.hbiScore}, pain=${s.painLevel}`).join('; ')}\n`;
-    if (sleep.length) ctx += `Recent sleep: ${sleep.slice(-3).map(s => `${s.date}: ${s.bedtime}-${s.wakeTime}, score=${s.circadianScore}`).join('; ')}\n`;
-    if (food.length) ctx += `Recent meals: ${food.slice(-3).map(f => `${f.date} ${f.mealType}: ${f.description}`).join('; ')}\n`;
-    if (mood.length) ctx += `Recent mood: ${mood.slice(-2).map(m => `${m.date}: mood=${m.mood}, energy=${m.energy}, stress=${m.stress}`).join('; ')}\n`;
+    if (symptoms.length) ctx += `Recent symptoms: ${symptoms.slice(-3).map((s: any) => `${s.date}: HBI=${s.hbiScore}, pain=${s.painLevel}`).join('; ')}\n`;
+    if (sleep.length) ctx += `Recent sleep: ${sleep.slice(-3).map((s: any) => `${s.date}: ${s.bedtime}-${s.wakeTime}, score=${s.circadianScore}`).join('; ')}\n`;
+    if (food.length) ctx += `Recent meals: ${food.slice(-3).map((f: any) => `${f.date} ${f.mealType}: ${f.description}`).join('; ')}\n`;
+    if (mood.length) ctx += `Recent mood: ${mood.slice(-2).map((m: any) => `${m.date}: mood=${m.mood}, energy=${m.energy}, stress=${m.stress}`).join('; ')}\n`;
     if (profile?.cycleStartDate) {
       const info = getCycleInfo(profile.cycleStartDate, today, profile.cycleLength || 28);
       ctx += `Cycle: Day ${info.cycleDay} (${info.phase} phase)\n`;
@@ -574,7 +574,7 @@ export default function AafiyaAgent() {
     try {
       const contextData = await getContextData();
       const triggersCtx = await getPersonalTriggersForAgentAction();
-      const history = messages.slice(-10).map(m => ({
+      const history = messages.slice(-10).map((m: any) => ({
         role: m.role === 'aafiya' ? 'assistant' : 'user',
         content: m.text,
       }));
@@ -778,7 +778,7 @@ export default function AafiyaAgent() {
       <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6">
         {flareRisk && messages.length <= 1 && <DashboardCard flareRisk={flareRisk} />}
 
-        {messages.map(msg => (
+        {messages.map((msg: any) => (
           msg.role === 'aafiya' ? <AafiyaBubble key={msg.id} msg={msg} /> : <UserBubble key={msg.id} msg={msg} />
         ))}
 

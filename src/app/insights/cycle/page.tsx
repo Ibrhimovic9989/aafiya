@@ -85,7 +85,7 @@ export default function CycleCorrelationPage() {
       if (profile?.cycleStartDate) {
         for (const s of symptoms) {
           // Only if not already covered by cycle entries
-          const alreadyCovered = cycle.some(c => c.date === s.date);
+          const alreadyCovered = cycle.some((c: any) => c.date === s.date);
           if (!alreadyCovered) {
             const start = new Date(profile.cycleStartDate);
             const current = new Date(s.date);

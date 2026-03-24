@@ -42,7 +42,7 @@ export default function ExperimentDetailPage() {
       // Load symptom data for experiment period
       const symptoms = await getSymptomsByDateRange(exp.startDate, exp.endDate);
 
-      symptoms.sort((a, b) => a.date.localeCompare(b.date));
+      symptoms.sort((a: any, b: any) => a.date.localeCompare(b.date));
 
       const startDate = new Date(exp.startDate).getTime();
       const baselineEnd = startDate + exp.baselineDays * 86400000;

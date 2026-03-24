@@ -55,21 +55,21 @@ export default function LearnPage() {
 
   async function confirmTrigger(id: string) {
     await confirmTriggerAction(id);
-    setTriggers(prev => prev.map(t => t.id === id ? { ...t, confirmed: true } : t));
+    setTriggers(prev => prev.map((t: any) => t.id === id ? { ...t, confirmed: true } : t));
   }
 
   async function dismissTrigger(id: string) {
     await dismissTriggerAction(id);
-    setTriggers(prev => prev.filter(t => t.id !== id));
+    setTriggers(prev => prev.filter((t: any) => t.id !== id));
   }
 
   async function markInsightRead(id: string) {
     await markInsightReadAction(id);
-    setInsights(prev => prev.map(i => i.id === id ? { ...i, read: true } : i));
+    setInsights(prev => prev.map((i: any) => i.id === id ? { ...i, read: true } : i));
   }
 
-  const confirmedTriggers = triggers.filter(t => t.confirmed);
-  const suspectedTriggers = triggers.filter(t => !t.confirmed);
+  const confirmedTriggers = triggers.filter((t: any) => t.confirmed);
+  const suspectedTriggers = triggers.filter((t: any) => !t.confirmed);
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 pb-24">
@@ -136,7 +136,7 @@ export default function LearnPage() {
               {confirmedTriggers.length > 0 && (
                 <>
                   <p className="text-[11px] font-semibold text-accent uppercase tracking-wider">Confirmed</p>
-                  {confirmedTriggers.map(t => (
+                  {confirmedTriggers.map((t: any) => (
                     <TriggerCard key={t.id} trigger={t} onDismiss={dismissTrigger} />
                   ))}
                 </>
@@ -148,7 +148,7 @@ export default function LearnPage() {
                   <p className="text-[11px] text-text-tertiary mb-2">
                     Do these match your experience? Confirming helps Aafiya give you better advice.
                   </p>
-                  {suspectedTriggers.map(t => (
+                  {suspectedTriggers.map((t: any) => (
                     <TriggerCard key={t.id} trigger={t} onConfirm={confirmTrigger} onDismiss={dismissTrigger} />
                   ))}
                 </>
@@ -170,7 +170,7 @@ export default function LearnPage() {
               </p>
             </Card>
           ) : (
-            insights.slice(0, 20).map(insight => (
+            insights.slice(0, 20).map((insight: any) => (
               <button
                 key={insight.id}
                 onClick={() => markInsightRead(insight.id)}

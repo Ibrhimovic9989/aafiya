@@ -61,7 +61,7 @@ export default function CompanionPage() {
     setSending(true);
     try {
       const context = await getRecentData();
-      const history = messages.slice(-20).map(m => ({ role: m.role, content: m.content }));
+      const history = messages.slice(-20).map((m: any) => ({ role: m.role, content: m.content }));
 
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
@@ -153,7 +153,7 @@ export default function CompanionPage() {
           </div>
         )}
 
-        {messages.map(msg => (
+        {messages.map((msg: any) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}>
             {msg.role === 'assistant' && (
               <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center shrink-0 mr-2 mt-1">
