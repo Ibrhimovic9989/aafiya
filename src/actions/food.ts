@@ -48,7 +48,7 @@ export async function getFoodByDateRange(startDate: string, endDate: string) {
     where: { userId: user.id, date: { gte: startDate, lte: endDate } },
     orderBy: { date: 'asc' },
   });
-  return entries.map(e => serializeEntry(decryptFields(e, ['description'])));
+  return entries.map((e: any) => serializeEntry(decryptFields(e, ['description'])));
 }
 
 export async function getRecentFood(days: number = 7) {

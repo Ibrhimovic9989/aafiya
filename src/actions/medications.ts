@@ -58,7 +58,7 @@ export async function bulkAddMedications(entries: {
     results.push(entry);
   }
   await logAudit({ userId: user.id, action: 'create', entity: 'medications', details: `Bulk add ${entries.length} entries` });
-  return results.map(e => decryptFields(e, ['medication']));
+  return results.map((e: any) => decryptFields(e, ['medication']));
 }
 
 export async function getMedicationsByDateRange(startDate: string, endDate: string) {
@@ -67,7 +67,7 @@ export async function getMedicationsByDateRange(startDate: string, endDate: stri
     where: { userId: user.id, date: { gte: startDate, lte: endDate } },
     orderBy: { date: 'asc' },
   });
-  return entries.map(e => decryptFields(e, ['medication']));
+  return entries.map((e: any) => decryptFields(e, ['medication']));
 }
 
 export async function getRecentMedications(days: number = 7) {

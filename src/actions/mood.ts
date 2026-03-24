@@ -40,7 +40,7 @@ export async function getMoodByDateRange(startDate: string, endDate: string) {
     where: { userId: user.id, date: { gte: startDate, lte: endDate } },
     orderBy: { date: 'asc' },
   });
-  return entries.map(e => ({
+  return entries.map((e: any) => ({
     ...decryptFields(e, ['notes']),
     timestamp: Number(e.timestamp),
   }));

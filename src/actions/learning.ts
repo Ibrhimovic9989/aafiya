@@ -11,7 +11,7 @@ export async function getTriggers() {
     where: { userId: user.id, dismissed: false },
     orderBy: { confidence: 'desc' },
   });
-  return triggers.map(t => ({
+  return triggers.map((t: any) => ({
     ...t,
     discoveredAt: Number(t.discoveredAt),
     lastUpdated: Number(t.lastUpdated),
@@ -42,7 +42,7 @@ export async function getInsights() {
     where: { userId: user.id },
     orderBy: { generatedAt: 'desc' },
   });
-  return entries.map(e => ({
+  return entries.map((e: any) => ({
     ...e,
     generatedAt: Number(e.generatedAt),
     type: e.type as any,

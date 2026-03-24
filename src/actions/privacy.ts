@@ -43,5 +43,5 @@ export async function getDataStatsAction() {
 export async function getAuditLogsAction(limit: number = 50) {
   const user = await getAuthUser();
   const logs = await getAuditLogs(user.id, { limit });
-  return logs.map(l => ({ ...l, timestamp: l.timestamp.toISOString() }));
+  return logs.map((l: any) => ({ ...l, timestamp: l.timestamp.toISOString() }));
 }

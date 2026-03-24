@@ -29,7 +29,7 @@ export async function getFlareRiskByDateRange(startDate: string, endDate: string
     where: { userId: user.id, date: { gte: startDate, lte: endDate } },
     orderBy: { date: 'desc' },
   });
-  return entries.map(e => ({
+  return entries.map((e: any) => ({
     ...e,
     level: e.level as 'low' | 'watch' | 'elevated' | 'high',
     factors: e.factors as any[],
