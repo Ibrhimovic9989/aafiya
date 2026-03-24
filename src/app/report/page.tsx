@@ -102,12 +102,12 @@ export default function ReportPage() {
     let cycleData = null;
     if (cycle.length > 0) {
       const phaseHBI: Record<string, number[]> = {};
-      const symptomByDate = new Map(symptoms.map((s: any) => [s.date, s.hbiScore]));
+      const symptomByDate = new Map<string, number>(symptoms.map((s: any) => [s.date, s.hbiScore]));
       for (const c of cycle) {
-        const hbi = symptomByDate.get(c.date);
+        const hbi = symptomByDate.get((c as any).date);
         if (hbi !== undefined) {
-          if (!phaseHBI[c.phase]) phaseHBI[c.phase] = [];
-          phaseHBI[c.phase].push(hbi);
+          if (!phaseHBI[(c as any).phase]) phaseHBI[(c as any).phase] = [];
+          phaseHBI[(c as any).phase].push(hbi);
         }
       }
       const worst = Object.entries(phaseHBI)
