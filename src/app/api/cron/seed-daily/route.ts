@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
         },
         select: { checkinId: true },
       });
-      const existingIds = new Set(existing.map((t) => t.checkinId));
+      const existingIds = new Set(existing.map((t: any) => t.checkinId));
 
       const leadMinutes = reminderLeadMinutes ?? 15;
       const tasksToCreate: any[] = [];

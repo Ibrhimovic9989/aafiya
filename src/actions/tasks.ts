@@ -110,7 +110,7 @@ export async function seedDailyTasks() {
     },
     select: { checkinId: true },
   });
-  const existingIds = new Set(existing.map((t) => t.checkinId));
+  const existingIds = new Set(existing.map((t: any) => t.checkinId));
 
   // Get user profile for timezone/preferences
   const profile = await prisma.userProfile.findUnique({
