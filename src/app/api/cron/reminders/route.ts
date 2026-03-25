@@ -131,11 +131,13 @@ async function handler(req: NextRequest) {
         continue;
       }
 
-      // Check quiet hours
+      // Check quiet hours — must compare against user's LOCAL time, not UTC
+      const userTz = profile.timezone || 'UTC';
+      const userLocalTime = new Date(now.toLocaleString('en-US', { timeZone: userTz }));
       if (isQuietHours(
         profile.quietHoursStart ?? '23:00',
         profile.quietHoursEnd ?? '07:00',
-        now
+        userLocalTime
       )) {
         results.skipped++;
         continue;
@@ -192,12 +194,15 @@ async function handler(req: NextRequest) {
             experiment_check: `exp-${task.id}`,
           };
 
-          await sendPushToUser(task.userId, {
+          const pushResult = await sendPushToUser(task.userId, {
             title: task.title,
             body: task.body,
             tag: tagMap[task.type] ?? task.id,
             url: getTaskUrl(task.type, task.checkinId),
           });
+          console.log(`[cron/reminders] Push for task ${task.id}: sent=${pushResult.sent}, failed=${pushResult.failed}`);
+        } else {
+          console.log(`[cron/reminders] Push disabled for user ${task.userId}`);
         }
 
         const newAttempts = task.attempts + 1;

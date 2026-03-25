@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { CONDITION_OPTIONS } from '@/lib/conditions/index';
 import { usePushNotifications } from '@/lib/usePushNotifications';
+import { updateNotificationPreferences } from '@/actions/tasks';
 
 export default function MorePage() {
   const [profile, setProfile] = useState<UserProfile>({
@@ -510,8 +511,10 @@ export default function MorePage() {
                   try {
                     if (notifSubscribed) {
                       await notifUnsubscribe();
+                      await updateNotificationPreferences({ pushEnabled: false });
                     } else {
                       await notifSubscribe();
+                      await updateNotificationPreferences({ pushEnabled: true });
                     }
                   } catch (err) {
                     console.error('Notification toggle failed:', err);
