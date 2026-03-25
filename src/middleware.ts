@@ -7,13 +7,16 @@ const { auth } = NextAuth(authConfig);
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
-  // Allow auth-related and static routes
+  // Allow auth-related, static, and cron/notification routes
   if (
     pathname.startsWith('/auth') ||
     pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/cron') ||
+    pathname.startsWith('/api/notifications') ||
     pathname.startsWith('/_next') ||
     pathname === '/favicon.ico' ||
     pathname === '/manifest.json' ||
+    pathname === '/sw-push.js' ||
     pathname.startsWith('/icons')
   ) {
     return;
