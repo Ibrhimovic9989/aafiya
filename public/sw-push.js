@@ -1,12 +1,79 @@
 /**
- * Service Worker — Push Notification Handler
+ * Service Worker — PWA + Push Notifications
  *
- * Handles incoming push events and notification click actions.
- * This file is served from /public and registered by the app.
+ * Handles:
+ * 1. App shell caching for offline/installability
+ * 2. Push notification display and actions
  */
 
 /* eslint-disable no-restricted-globals */
 
+const CACHE_NAME = 'aafiya-v1';
+const SHELL_ASSETS = [
+  '/',
+  '/manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+];
+
+// ── Install: cache app shell ──
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(SHELL_ASSETS);
+    })
+  );
+  self.skipWaiting();
+});
+
+// ── Activate: clean old caches ──
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+// ── Fetch: network-first with cache fallback ──
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Skip non-GET, API routes, and cross-origin
+  if (
+    event.request.method !== 'GET' ||
+    url.pathname.startsWith('/api/') ||
+    url.origin !== self.location.origin
+  ) {
+    return;
+  }
+
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        // Cache successful navigation responses
+        if (response.ok && (event.request.mode === 'navigate' || SHELL_ASSETS.includes(url.pathname))) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => {
+        // Offline: serve from cache
+        return caches.match(event.request).then((cached) => {
+          if (cached) return cached;
+          // For navigation requests, serve the cached home page
+          if (event.request.mode === 'navigate') {
+            return caches.match('/');
+          }
+          return new Response('Offline', { status: 503 });
+        });
+      })
+  );
+});
+
+// ── Push Notifications ──
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
@@ -22,8 +89,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: payload.body || '',
-    icon: payload.icon || '/icons/icon-192x192.png',
-    badge: payload.badge || '/icons/badge-72x72.png',
+    icon: payload.icon || '/icons/icon-192.png',
+    badge: payload.badge || '/icons/badge-72.png',
     tag: payload.tag || 'aafiya-notification',
     renotify: true,
     data: payload.data || {},
@@ -46,7 +113,6 @@ self.addEventListener('notificationclick', (event) => {
   const data = event.notification.data || {};
 
   if (action === 'snooze') {
-    // Snooze: re-schedule for 30 minutes later via API
     event.waitUntil(
       fetch('/api/notifications/snooze', {
         method: 'POST',
@@ -57,12 +123,10 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
 
-  // Default: open the app at the specified URL
   const urlToOpen = data.url || '/';
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // If the app is already open, focus it and navigate
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
           client.focus();
@@ -72,14 +136,12 @@ self.addEventListener('notificationclick', (event) => {
           return;
         }
       }
-      // Otherwise open a new window
       return self.clients.openWindow(urlToOpen);
     })
   );
 });
 
 self.addEventListener('notificationclose', (event) => {
-  // Track dismissed notifications
   const data = event.notification.data || {};
   if (data.taskId) {
     fetch('/api/notifications/dismiss', {
