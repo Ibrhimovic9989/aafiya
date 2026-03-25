@@ -1,7 +1,7 @@
 -- ═══════════════════════════════════════════════════════════════
 -- Aafiya — Supabase Cron Jobs (pg_cron + pg_net)
 --
--- Run this in Supabase SQL Editor (Dashboard → SQL Editor → New Query)
+-- Run this in Supabase SQL Editor (Dashboard > SQL Editor > New Query)
 -- These use pg_net to make HTTP calls to our API routes.
 --
 -- Prerequisites: pg_cron and pg_net extensions must be enabled.
@@ -13,6 +13,7 @@ CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
 -- ── 1. Process pending reminders — every 5 minutes ──────────
+-- This is the main loop that sends push notifications
 
 SELECT cron.unschedule('aafiya-process-reminders')
 WHERE EXISTS (
@@ -24,10 +25,10 @@ SELECT cron.schedule(
   '*/5 * * * *',
   $$
   SELECT net.http_post(
-    url := current_setting('app.settings.app_url', true) || '/api/cron/reminders',
+    url := 'https://aafiya-omega.vercel.app/api/cron/reminders',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || current_setting('app.settings.cron_secret', true)
+      'Authorization', 'Bearer aafiya_cron_secret_change_in_production'
     ),
     body := '{}'::jsonb
   );
@@ -46,10 +47,10 @@ SELECT cron.schedule(
   '0 */2 * * *',
   $$
   SELECT net.http_post(
-    url := current_setting('app.settings.app_url', true) || '/api/cron/followups',
+    url := 'https://aafiya-omega.vercel.app/api/cron/followups',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || current_setting('app.settings.cron_secret', true)
+      'Authorization', 'Bearer aafiya_cron_secret_change_in_production'
     ),
     body := '{}'::jsonb
   );
@@ -57,8 +58,6 @@ SELECT cron.schedule(
 );
 
 -- ── 3. Daily task seeding — every day at 00:05 UTC ──────────
--- Seeds today's check-in reminders for all users.
--- This calls a dedicated endpoint that loops through active users.
 
 SELECT cron.unschedule('aafiya-seed-daily-tasks')
 WHERE EXISTS (
@@ -70,10 +69,10 @@ SELECT cron.schedule(
   '5 0 * * *',
   $$
   SELECT net.http_post(
-    url := current_setting('app.settings.app_url', true) || '/api/cron/seed-daily',
+    url := 'https://aafiya-omega.vercel.app/api/cron/seed-daily',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || current_setting('app.settings.cron_secret', true)
+      'Authorization', 'Bearer aafiya_cron_secret_change_in_production'
     ),
     body := '{}'::jsonb
   );
@@ -107,20 +106,6 @@ SELECT cron.schedule(
   WHERE "sentAt" < NOW() - INTERVAL '90 days';
   $$
 );
-
--- ═══════════════════════════════════════════════════════════════
--- CONFIGURATION
--- ═══════════════════════════════════════════════════════════════
--- Set these in Supabase Dashboard → Settings → Database → Settings
--- Or run:
---
---   ALTER DATABASE postgres SET app.settings.app_url = 'https://your-app.vercel.app';
---   ALTER DATABASE postgres SET app.settings.cron_secret = 'your-cron-secret-here';
---
--- For local dev:
---   ALTER DATABASE postgres SET app.settings.app_url = 'http://localhost:3000';
---   ALTER DATABASE postgres SET app.settings.cron_secret = 'aafiya_cron_secret_change_in_production';
--- ═══════════════════════════════════════════════════════════════
 
 -- ── Verify cron jobs are registered ──────────────────────────
 SELECT jobname, schedule, command FROM cron.job WHERE jobname LIKE 'aafiya-%';

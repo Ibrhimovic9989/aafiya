@@ -63,8 +63,8 @@ export async function sendPushToUser(
   const notificationPayload = JSON.stringify({
     title: payload.title,
     body: payload.body,
-    icon: payload.icon ?? '/icons/icon-192x192.png',
-    badge: payload.badge ?? '/icons/badge-72x72.png',
+    icon: payload.icon ?? '/icons/icon-192.png',
+    badge: payload.badge ?? '/icons/badge-72.png',
     tag: payload.tag,
     data: {
       url: payload.url ?? '/',
