@@ -1,9 +1,10 @@
-// Cron endpoint: Process pending reminders
+// Cron endpoint: Process pending reminders with persistent reminder loops.
 // Called every 5 minutes by Supabase pg_cron via pg_net.
 // Security: Protected by CRON_SECRET header.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { DAILY_SCHEDULE } from '@/lib/schedule';
 import { sendPushToUser, sendInAppNotification, isQuietHours } from '@/lib/notifications';
 
 export const runtime = 'nodejs';
@@ -12,6 +13,72 @@ export const maxDuration = 30; // seconds
 // pg_net uses http_post, but also support GET for manual testing
 export async function POST(req: NextRequest) { return handler(req); }
 export async function GET(req: NextRequest) { return handler(req); }
+
+/**
+ * Check if a check-in has been completed for a given user/checkinId today.
+ * Queries the database directly (no auth session needed — this is a cron job).
+ */
+async function isCheckinComplete(
+  userId: string,
+  checkinId: string,
+  today: string
+): Promise<boolean> {
+  // Find the schedule item to determine its category
+  const scheduleItem = DAILY_SCHEDULE.find(s => s.id === checkinId);
+  if (!scheduleItem) return true; // unknown check-in — treat as complete
+
+  switch (scheduleItem.category) {
+    case 'symptom': {
+      const count = await prisma.symptomEntry.count({
+        where: { userId, date: today },
+      });
+      return count > 0;
+    }
+    case 'food': {
+      // Check if the specific meal type has been logged
+      // checkinId maps: breakfast -> 'breakfast', lunch -> 'lunch', etc.
+      const mealType = checkinId; // 'breakfast', 'lunch', 'dinner', 'snack'
+      const count = await prisma.foodEntry.count({
+        where: { userId, date: today, mealType },
+      });
+      return count > 0;
+    }
+    case 'sleep': {
+      const count = await prisma.sleepEntry.count({
+        where: { userId, date: today },
+      });
+      return count > 0;
+    }
+    case 'meds': {
+      // Check if meds have been taken for the appropriate time of day
+      const entries = await prisma.medicationEntry.findMany({
+        where: { userId, date: today, taken: true },
+        select: { time: true },
+      });
+      if (checkinId === 'morning_meds') {
+        return entries.some(m => {
+          const hour = parseInt(m.time?.split(':')[0] || '0');
+          return hour < 14;
+        });
+      }
+      if (checkinId === 'evening_meds') {
+        return entries.some(m => {
+          const hour = parseInt(m.time?.split(':')[0] || '0');
+          return hour >= 14;
+        });
+      }
+      return entries.length > 0;
+    }
+    case 'mood': {
+      const count = await prisma.moodEntry.count({
+        where: { userId, date: today },
+      });
+      return count > 0;
+    }
+    default:
+      return false;
+  }
+}
 
 async function handler(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
@@ -22,7 +89,8 @@ async function handler(req: NextRequest) {
   }
 
   const now = new Date();
-  const results = { processed: 0, sent: 0, skipped: 0, failed: 0, expired: 0 };
+  const today = now.toISOString().split('T')[0];
+  const results = { processed: 0, sent: 0, skipped: 0, failed: 0, expired: 0, followups: 0 };
 
   try {
     // Find all due tasks: pending + scheduled time has passed
@@ -43,6 +111,7 @@ async function handler(req: NextRequest) {
                 pushEnabled: true,
                 quietHoursStart: true,
                 quietHoursEnd: true,
+                timezone: true,
               },
             },
           },
@@ -85,14 +154,28 @@ async function handler(req: NextRequest) {
         }
       }
 
-      // Check max attempts
+      // Check max attempts — after max, mark as expired
       if (task.attempts >= task.maxAttempts) {
         await prisma.scheduledTask.update({
           where: { id: task.id },
-          data: { status: 'failed' },
+          data: { status: 'expired' },
         });
-        results.failed++;
+        results.expired++;
         continue;
+      }
+
+      // For checkin_reminder tasks, check if the check-in was already completed
+      if (task.type === 'checkin_reminder' && task.checkinId) {
+        const completed = await isCheckinComplete(task.userId, task.checkinId, today);
+        if (completed) {
+          // Mark as completed — no need to remind
+          await prisma.scheduledTask.update({
+            where: { id: task.id },
+            data: { status: 'sent', completedAt: now },
+          });
+          results.skipped++;
+          continue;
+        }
       }
 
       // Send notification
@@ -117,20 +200,60 @@ async function handler(req: NextRequest) {
           });
         }
 
-        // Update task status
-        await prisma.scheduledTask.update({
-          where: { id: task.id },
-          data: {
-            status: 'sent',
-            attempts: task.attempts + 1,
-            lastAttempt: now,
-            completedAt: now,
-          },
-        });
+        const newAttempts = task.attempts + 1;
+
+        // For checkin_reminder tasks: create a follow-up if under maxAttempts
+        if (task.type === 'checkin_reminder' && task.checkinId && newAttempts < task.maxAttempts) {
+          // Mark current task as sent but NOT completed
+          await prisma.scheduledTask.update({
+            where: { id: task.id },
+            data: {
+              status: 'sent',
+              attempts: newAttempts,
+              lastAttempt: now,
+              // No completedAt — the check-in hasn't been done yet
+            },
+          });
+
+          // Get the shorter reminder text for the follow-up
+          const scheduleItem = DAILY_SCHEDULE.find(s => s.id === task.checkinId);
+          const reminderBody = scheduleItem?.aafiyaReminder ?? task.body;
+
+          // Create a follow-up task 30 minutes from now
+          const followUpTime = new Date(now.getTime() + 30 * 60 * 1000);
+          await prisma.scheduledTask.create({
+            data: {
+              userId: task.userId,
+              type: 'checkin_reminder',
+              checkinId: task.checkinId,
+              title: task.title,
+              body: reminderBody,
+              priority: task.priority,
+              scheduledFor: followUpTime,
+              timezone: task.timezone,
+              attempts: newAttempts, // carry forward attempt count
+              maxAttempts: task.maxAttempts,
+              parentTaskId: task.parentTaskId ?? task.id,
+              triggerEvent: 'followup_reminder',
+            },
+          });
+          results.followups++;
+        } else {
+          // Non-checkin tasks OR max attempts reached: mark as fully sent/completed
+          await prisma.scheduledTask.update({
+            where: { id: task.id },
+            data: {
+              status: 'sent',
+              attempts: newAttempts,
+              lastAttempt: now,
+              completedAt: now,
+            },
+          });
+        }
 
         results.sent++;
 
-        // Handle recurrence — create next occurrence
+        // Handle recurrence — create next occurrence (for recurring tasks, not checkin follow-ups)
         if (task.recurrence) {
           const nextDate = getNextRecurrence(task.scheduledFor, task.recurrence);
           if (!task.recurrenceEnd || nextDate <= task.recurrenceEnd) {
@@ -143,6 +266,7 @@ async function handler(req: NextRequest) {
                 body: task.body,
                 priority: task.priority,
                 scheduledFor: nextDate,
+                timezone: task.timezone,
                 recurrence: task.recurrence,
                 cronExpr: task.cronExpr,
                 recurrenceEnd: task.recurrenceEnd,

@@ -188,6 +188,7 @@ export interface UserProfile {
   doctorContact: string;
   onboardingComplete: boolean;
   trackCycle: boolean; // whether to show cycle tracking
+  timezone: string; // IANA timezone (e.g., "Asia/Kolkata")
 }
 
 export interface ChatMessage {

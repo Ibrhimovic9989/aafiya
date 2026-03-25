@@ -8,6 +8,7 @@ import { getRecentSleep } from '@/actions/sleep';
 import { getRecentMood } from '@/actions/mood';
 import { getRecentCycle } from '@/actions/cycle';
 import { getRecentMedications } from '@/actions/medications';
+import { getProfileSafe } from '@/actions/profile';
 
 interface LogType {
   href: string;
@@ -62,6 +63,15 @@ function timeAgo(dateStr: string): string {
 
 export default function LogHubPage() {
   const [lastLogged, setLastLogged] = useState<Record<string, string>>({});
+  const [trackCycle, setTrackCycle] = useState(true);
+
+  useEffect(() => {
+    async function loadProfile() {
+      const profile = await getProfileSafe();
+      if (profile) setTrackCycle(profile.trackCycle);
+    }
+    loadProfile();
+  }, []);
 
   useEffect(() => {
     async function loadLastLogged() {
@@ -96,7 +106,7 @@ export default function LogHubPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 stagger">
-        {logTypes.map(log => (
+        {logTypes.filter(log => trackCycle || log.table !== 'cycle').map(log => (
           <Link key={log.href} href={log.href}>
             <div className="rounded-xl border border-border bg-bg p-4 tap h-full relative overflow-hidden animate-slide-up hover:bg-bg-secondary transition-colors">
               <div className="relative">

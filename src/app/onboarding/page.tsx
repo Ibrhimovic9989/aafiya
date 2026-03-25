@@ -54,6 +54,9 @@ export default function OnboardingPage() {
   }
 
   async function complete() {
+    // Detect the user's timezone from the browser
+    const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
     await upsertProfile({
       name,
       conditionId: conditionId!,
@@ -68,6 +71,7 @@ export default function OnboardingPage() {
       doctorContact,
       onboardingComplete: true,
       trackCycle,
+      timezone: detectedTimezone,
     });
     router.push('/');
   }

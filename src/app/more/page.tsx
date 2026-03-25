@@ -16,6 +16,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { CONDITION_OPTIONS } from '@/lib/conditions/index';
+import { usePushNotifications } from '@/lib/usePushNotifications';
 
 export default function MorePage() {
   const [profile, setProfile] = useState<UserProfile>({
@@ -33,11 +34,22 @@ export default function MorePage() {
     doctorContact: '',
     onboardingComplete: false,
     trackCycle: true,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
+  const [detectedTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [medInput, setMedInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const {
+    supported: notifSupported,
+    permission: notifPermission,
+    isSubscribed: notifSubscribed,
+    loading: notifLoading,
+    subscribe: notifSubscribe,
+    unsubscribe: notifUnsubscribe,
+  } = usePushNotifications();
+  const [notifToggling, setNotifToggling] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -286,7 +298,24 @@ export default function MorePage() {
             </Card>
           </div>
 
+          {/* Cycle Tracking Toggle */}
+          <Card padding="md">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-text-primary">Cycle Tracking</p>
+                <p className="text-[11px] text-text-secondary">Track menstrual cycle phases</p>
+              </div>
+              <button
+                onClick={() => setProfile(prev => ({ ...prev, trackCycle: !prev.trackCycle }))}
+                className={`relative w-12 h-7 rounded-full transition-colors ${profile.trackCycle ? 'bg-accent' : 'bg-border'}`}
+              >
+                <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${profile.trackCycle ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </button>
+            </div>
+          </Card>
+
           {/* Cycle Config */}
+          {profile.trackCycle && (
           <div className="grid grid-cols-2 gap-3">
             <Card padding="md">
               <label className="block text-xs font-medium text-text-secondary mb-1">Cycle Start Date</label>
@@ -309,6 +338,30 @@ export default function MorePage() {
               />
             </Card>
           </div>
+          )}
+
+          {/* Timezone */}
+          <Card padding="md">
+            <label className="block text-xs font-medium text-text-secondary mb-1">Timezone</label>
+            <input
+              type="text"
+              value={profile.timezone}
+              onChange={e => setProfile(prev => ({ ...prev, timezone: e.target.value }))}
+              placeholder={detectedTimezone}
+              className="w-full px-3 py-2 rounded-lg bg-bg-secondary text-sm text-text-primary placeholder:text-text-tertiary outline-none focus:ring-2 focus:ring-accent/30"
+            />
+            {profile.timezone !== detectedTimezone && (
+              <button
+                onClick={() => setProfile(prev => ({ ...prev, timezone: detectedTimezone }))}
+                className="text-[11px] text-accent font-medium mt-1.5"
+              >
+                Reset to detected: {detectedTimezone}
+              </button>
+            )}
+            <p className="text-[10px] text-text-tertiary mt-1">
+              Detected: {detectedTimezone}. Used for scheduling reminders at the right local time.
+            </p>
+          </Card>
 
           <Button fullWidth onClick={saveProfile} disabled={saving}>
             {saving ? 'Saving...' : 'Save Profile'}
@@ -331,6 +384,64 @@ export default function MorePage() {
           </button>
         </div>
       </Card>
+
+      {/* Notifications */}
+      {notifSupported && (
+        <div className="mb-6">
+          <p className="text-sm font-semibold text-text-primary mb-3">Notifications</p>
+          <Card padding="md">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-sm font-medium text-text-primary">Push Notifications</p>
+                <p className="text-[11px] text-text-secondary">
+                  Reminders for check-ins, medication, and more
+                </p>
+              </div>
+              <button
+                disabled={notifLoading || notifToggling || notifPermission === 'denied'}
+                onClick={async () => {
+                  setNotifToggling(true);
+                  try {
+                    if (notifSubscribed) {
+                      await notifUnsubscribe();
+                    } else {
+                      await notifSubscribe();
+                    }
+                  } catch (err) {
+                    console.error('Notification toggle failed:', err);
+                  } finally {
+                    setNotifToggling(false);
+                  }
+                }}
+                className={`relative w-12 h-7 rounded-full transition-colors disabled:opacity-40 ${notifSubscribed ? 'bg-accent' : 'bg-border'}`}
+              >
+                <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${notifSubscribed ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                notifPermission === 'granted'
+                  ? 'bg-green-500'
+                  : notifPermission === 'denied'
+                  ? 'bg-red-500'
+                  : 'bg-yellow-500'
+              }`} />
+              <p className="text-[11px] text-text-tertiary">
+                {notifPermission === 'granted'
+                  ? 'Permission granted'
+                  : notifPermission === 'denied'
+                  ? 'Permission blocked by browser'
+                  : 'Permission not yet requested'}
+              </p>
+            </div>
+            {notifPermission === 'denied' && (
+              <p className="text-[11px] text-text-secondary mt-2 leading-relaxed">
+                Notifications are blocked. To re-enable, open your browser settings and allow notifications for this site, then reload the page.
+              </p>
+            )}
+          </Card>
+        </div>
+      )}
 
       {/* Data Management */}
       <div className="mb-6">

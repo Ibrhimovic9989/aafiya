@@ -50,6 +50,7 @@ export async function upsertProfile(data: {
   doctorContact?: string;
   onboardingComplete?: boolean;
   trackCycle?: boolean;
+  timezone?: string;
 }) {
   const user = await getAuthUser();
   const encrypted = encryptFields(
