@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { upsertProfile } from '@/actions/profile';
+import { seedMedicationTasksNow } from '@/actions/tasks';
 import { Button } from '@/components/ui/Button';
 import { CONDITION_OPTIONS, getConditionsByCategory, CATEGORY_LABELS, getConditionProfile } from '@/lib/conditions/index';
 import type { ConditionId, ConditionProfile } from '@/lib/conditions/types';
@@ -84,6 +85,10 @@ export default function OnboardingPage() {
       medicationTimings: medTimings,
       timezone: detectedTimezone,
     });
+    // Immediately seed medication tasks for today
+    if (medTimings.length > 0) {
+      await seedMedicationTasksNow(medTimings);
+    }
     router.push('/');
   }
 

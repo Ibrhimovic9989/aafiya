@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { CONDITION_OPTIONS } from '@/lib/conditions/index';
 import { usePushNotifications } from '@/lib/usePushNotifications';
-import { updateNotificationPreferences } from '@/actions/tasks';
+import { updateNotificationPreferences, seedMedicationTasksNow } from '@/actions/tasks';
 
 export default function MorePage() {
   const [profile, setProfile] = useState<UserProfile>({
@@ -77,6 +77,10 @@ export default function MorePage() {
         await upsertProfile({ ...profile });
         const saved = await getProfile();
         if (saved) setProfile(saved);
+      }
+      // Immediately create medication tasks for today's remaining times
+      if (profile.medicationTimings && profile.medicationTimings.length > 0) {
+        await seedMedicationTasksNow(profile.medicationTimings);
       }
     } catch (err) {
       console.error('Failed to save profile:', err);

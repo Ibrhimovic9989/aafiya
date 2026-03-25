@@ -297,6 +297,105 @@ export async function generateEventFollowUps(userId: string) {
   return followUps;
 }
 
+// ── Immediate Medication Task Seeding ────────────────────────────
+
+/**
+ * Create medication reminder tasks for today whenever timings are updated.
+ * Called from the settings page after saving new medication timings.
+ * This ensures tasks exist even if seed-daily already ran for the day.
+ */
+export async function seedMedicationTasksNow(
+  medTimings: { name: string; times: string[] }[]
+) {
+  const user = await getAuthUser();
+  const profile = await prisma.userProfile.findUnique({
+    where: { userId: user.id },
+    select: { timezone: true, notificationsEnabled: true },
+  });
+
+  if (!profile?.notificationsEnabled) return { created: 0 };
+
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const todayStart = new Date(`${todayStr}T00:00:00Z`);
+  const userTz = profile.timezone || 'UTC';
+
+  // Check existing med tasks for today
+  const existing = await prisma.scheduledTask.findMany({
+    where: {
+      userId: user.id,
+      type: 'medication_reminder',
+      scheduledFor: { gte: todayStart },
+    },
+    select: { checkinId: true },
+  });
+  const existingIds = new Set(existing.map((t: any) => t.checkinId));
+
+  const tasksToCreate: any[] = [];
+
+  for (const med of medTimings) {
+    for (const time of med.times) {
+      const medTaskId = `med_${med.name}_${time}`;
+      if (existingIds.has(medTaskId)) continue;
+
+      const scheduledDate = localTimeToUTC(time, userTz);
+
+      // Skip if the time already passed
+      if (scheduledDate <= now) continue;
+
+      tasksToCreate.push({
+        userId: user.id,
+        type: 'medication_reminder',
+        checkinId: medTaskId,
+        title: `Take ${med.name}`,
+        body: `Time to take your ${med.name} (scheduled for ${time})`,
+        priority: 'high',
+        scheduledFor: scheduledDate,
+        timezone: userTz,
+        maxAttempts: 2,
+      });
+    }
+  }
+
+  if (tasksToCreate.length > 0) {
+    await prisma.scheduledTask.createMany({ data: tasksToCreate });
+  }
+
+  return { created: tasksToCreate.length };
+}
+
+/**
+ * Convert a local time string "HH:mm" in a given timezone to a UTC Date for today.
+ */
+function localTimeToUTC(localTime: string, timezone: string): Date {
+  const [hourStr, minStr] = localTime.split(':');
+  const hour = parseInt(hourStr || '0');
+  const minute = parseInt(minStr || '0');
+
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const localDateStr = `${todayStr}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+
+  const tempDate = new Date(`${todayStr}T12:00:00Z`);
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(tempDate);
+  const getPart = (type: string) => parts.find(p => p.type === type)?.value ?? '0';
+
+  const localAtRef = new Date(
+    `${getPart('year')}-${getPart('month')}-${getPart('day')}T${getPart('hour')}:${getPart('minute')}:${getPart('second')}Z`
+  );
+
+  const offsetMs = localAtRef.getTime() - tempDate.getTime();
+  const localTarget = new Date(`${localDateStr}Z`);
+  return new Date(localTarget.getTime() - offsetMs);
+}
+
 // ── Notification Preferences ────────────────────────────────────
 
 export async function getNotificationPreferences() {
