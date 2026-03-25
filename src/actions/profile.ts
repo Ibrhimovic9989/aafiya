@@ -17,6 +17,11 @@ function serializeProfile(profile: any) {
       : typeof profile.medications === 'string'
         ? JSON.parse(profile.medications)
         : [],
+    medicationTimings: Array.isArray(profile.medicationTimings)
+      ? profile.medicationTimings
+      : typeof profile.medicationTimings === 'string'
+        ? JSON.parse(profile.medicationTimings)
+        : [],
   };
 }
 
@@ -50,6 +55,8 @@ export async function upsertProfile(data: {
   doctorContact?: string;
   onboardingComplete?: boolean;
   trackCycle?: boolean;
+  gender?: string;
+  medicationTimings?: { name: string; times: string[] }[];
   timezone?: string;
 }) {
   const user = await getAuthUser();
@@ -58,10 +65,11 @@ export async function upsertProfile(data: {
     [...ENCRYPTED_FIELDS]
   );
 
-  // Convert medications array to JSON
+  // Convert arrays to JSON for Prisma
   const profileData = {
     ...encrypted,
     medications: data.medications ? JSON.stringify(data.medications) : undefined,
+    medicationTimings: data.medicationTimings ? JSON.stringify(data.medicationTimings) : undefined,
   };
 
   const profile = await prisma.userProfile.upsert({

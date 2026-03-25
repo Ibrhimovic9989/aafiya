@@ -59,6 +59,39 @@ function localHourToUTC(localHour: number, timezone: string, leadMinutes: number
   return utcTarget;
 }
 
+/**
+ * Convert a local time string "HH:mm" in a given timezone to a UTC Date for today.
+ */
+function localTimeToUTC(localTime: string, timezone: string): Date {
+  const [hourStr, minStr] = localTime.split(':');
+  const hour = parseInt(hourStr || '0');
+  const minute = parseInt(minStr || '0');
+
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+
+  const localDateStr = `${todayStr}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+
+  const tempDate = new Date(`${todayStr}T12:00:00Z`);
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(tempDate);
+  const getPart = (type: string) => parts.find(p => p.type === type)?.value ?? '0';
+
+  const localAtRef = new Date(
+    `${getPart('year')}-${getPart('month')}-${getPart('day')}T${getPart('hour')}:${getPart('minute')}:${getPart('second')}Z`
+  );
+
+  const offsetMs = localAtRef.getTime() - tempDate.getTime();
+  const localTarget = new Date(`${localDateStr}Z`);
+  return new Date(localTarget.getTime() - offsetMs);
+}
+
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
@@ -70,7 +103,7 @@ export async function POST(req: NextRequest) {
   const now = new Date();
   const today = now.toISOString().split('T')[0];
   const todayStart = new Date(`${today}T00:00:00Z`);
-  const results = { usersProcessed: 0, tasksCreated: 0 };
+  const results = { usersProcessed: 0, tasksCreated: 0, medTasksCreated: 0 };
 
   try {
     const users = await prisma.userProfile.findMany({
@@ -79,29 +112,38 @@ export async function POST(req: NextRequest) {
         userId: true,
         reminderLeadMinutes: true,
         timezone: true,
+        medicationTimings: true,
+        medications: true,
       },
     });
 
-    for (const { userId, reminderLeadMinutes, timezone } of users) {
+    for (const user of users) {
+      const { userId, reminderLeadMinutes, timezone } = user;
+
       // Check what's already scheduled today for this user
       const existing = await prisma.scheduledTask.findMany({
         where: {
           userId,
-          type: 'checkin_reminder',
           scheduledFor: { gte: todayStart },
+          type: { in: ['checkin_reminder', 'medication_reminder'] },
         },
-        select: { checkinId: true },
+        select: { checkinId: true, type: true },
       });
-      const existingIds = new Set(existing.map((t: any) => t.checkinId));
+      const existingCheckinIds = new Set(
+        existing.filter((t: any) => t.type === 'checkin_reminder').map((t: any) => t.checkinId)
+      );
+      const existingMedIds = new Set(
+        existing.filter((t: any) => t.type === 'medication_reminder').map((t: any) => t.checkinId)
+      );
 
       const leadMinutes = reminderLeadMinutes ?? 15;
       const userTimezone = timezone || 'UTC';
       const tasksToCreate: any[] = [];
 
+      // Seed check-in reminders from DAILY_SCHEDULE
       for (const item of DAILY_SCHEDULE) {
-        if (existingIds.has(item.id)) continue;
+        if (existingCheckinIds.has(item.id)) continue;
 
-        // Convert the user's local window start hour to UTC
         const scheduledDate = localHourToUTC(item.windowStart, userTimezone, leadMinutes);
 
         tasksToCreate.push({
@@ -114,6 +156,35 @@ export async function POST(req: NextRequest) {
           scheduledFor: scheduledDate,
           timezone: userTimezone,
         });
+      }
+
+      // Seed medication reminders from user's configured timings
+      const medTimings: { name: string; times: string[] }[] = Array.isArray(user.medicationTimings)
+        ? user.medicationTimings as any[]
+        : typeof user.medicationTimings === 'string'
+          ? JSON.parse(user.medicationTimings as string)
+          : [];
+
+      for (const medTiming of medTimings) {
+        for (const time of medTiming.times) {
+          const medTaskId = `med_${medTiming.name}_${time}`;
+          if (existingMedIds.has(medTaskId)) continue;
+
+          const scheduledDate = localTimeToUTC(time, userTimezone);
+
+          tasksToCreate.push({
+            userId,
+            type: 'medication_reminder',
+            checkinId: medTaskId,
+            title: `Take ${medTiming.name}`,
+            body: `Time to take your ${medTiming.name} (scheduled for ${time})`,
+            priority: 'high',
+            scheduledFor: scheduledDate,
+            timezone: userTimezone,
+            maxAttempts: 2,
+          });
+          results.medTasksCreated++;
+        }
       }
 
       if (tasksToCreate.length > 0) {

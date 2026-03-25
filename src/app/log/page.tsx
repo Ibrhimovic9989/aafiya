@@ -63,12 +63,12 @@ function timeAgo(dateStr: string): string {
 
 export default function LogHubPage() {
   const [lastLogged, setLastLogged] = useState<Record<string, string>>({});
-  const [trackCycle, setTrackCycle] = useState(true);
+  const [showCycle, setShowCycle] = useState(true);
 
   useEffect(() => {
     async function loadProfile() {
       const profile = await getProfileSafe();
-      if (profile) setTrackCycle(profile.trackCycle);
+      if (profile) setShowCycle(profile.gender !== 'male' && profile.trackCycle);
     }
     loadProfile();
   }, []);
@@ -106,7 +106,7 @@ export default function LogHubPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 stagger">
-        {logTypes.filter(log => trackCycle || log.table !== 'cycle').map(log => (
+        {logTypes.filter(log => showCycle || log.table !== 'cycle').map(log => (
           <Link key={log.href} href={log.href}>
             <div className="rounded-xl border border-border bg-bg p-4 tap h-full relative overflow-hidden animate-slide-up hover:bg-bg-secondary transition-colors">
               <div className="relative">

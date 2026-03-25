@@ -6,6 +6,7 @@ import { getSymptomsByDateRange } from '@/actions/symptoms';
 import { getFoodByDateRange } from '@/actions/food';
 import { getSleepByDateRange } from '@/actions/sleep';
 import { getCycleByDateRange } from '@/actions/cycle';
+import { getProfileSafe } from '@/actions/profile';
 import { Card } from '@/components/ui/Card';
 import { mean } from '@/lib/statistics';
 import { useCondition } from '@/lib/useCondition';
@@ -20,24 +21,32 @@ interface InsightPreview {
 export default function InsightsPage() {
   const { profile: conditionProfile } = useCondition();
   const scoreName = conditionProfile.scoring.name;
+  const conditionShort = conditionProfile.shortName;
   const [preview, setPreview] = useState<InsightPreview>({
     flareTimeline: 'Loading...',
     triggers: 'Loading...',
     sleep: 'Loading...',
     cycle: 'Loading...',
   });
+  const [showCycle, setShowCycle] = useState(false);
 
   useEffect(() => {
     async function loadPreviews() {
       const today = new Date().toISOString().split('T')[0];
       const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
 
-      const [symptoms, food, sleep, cycle] = await Promise.all([
+      const [symptoms, food, sleep, cycle, userProfile] = await Promise.all([
         getSymptomsByDateRange(monthAgo, today),
         getFoodByDateRange(monthAgo, today),
         getSleepByDateRange(monthAgo, today),
         getCycleByDateRange(monthAgo, today),
+        getProfileSafe(),
       ]);
+
+      // Determine if cycle card should show
+      const gender = userProfile?.gender || '';
+      const trackCycle = userProfile?.trackCycle ?? true;
+      setShowCycle(gender !== 'male' && trackCycle);
 
       const flareTimeline = symptoms.length > 0
         ? `Avg ${scoreName}: ${mean(symptoms.map((s: any) => s.activityScore ?? s.hbiScore)).toFixed(1)} over ${symptoms.length} entries`
@@ -68,6 +77,7 @@ export default function InsightsPage() {
 
   const cards = [
     {
+      id: 'flare',
       title: 'Flare Timeline',
       description: `${scoreName} scores and symptom trends over time`,
       href: '/insights/flare-timeline',
@@ -80,8 +90,9 @@ export default function InsightsPage() {
       bg: 'bg-[#F97316]/10',
     },
     {
+      id: 'triggers',
       title: 'Food Triggers',
-      description: 'Identify foods that correlate with flares',
+      description: `Identify foods that correlate with ${conditionShort} flares`,
       href: '/insights/triggers',
       stat: preview.triggers,
       icon: (
@@ -96,6 +107,7 @@ export default function InsightsPage() {
       bg: 'bg-[#F59E0B]/10',
     },
     {
+      id: 'sleep',
       title: 'Sleep Analysis',
       description: 'Circadian rhythm and sleep quality trends',
       href: '/insights/sleep',
@@ -108,8 +120,9 @@ export default function InsightsPage() {
       bg: 'bg-[#7C3AED]/10',
     },
     {
+      id: 'cycle',
       title: 'Cycle Correlation',
-      description: 'How your menstrual cycle affects symptoms',
+      description: `How your menstrual cycle affects ${conditionShort} symptoms`,
       href: '/insights/cycle',
       stat: preview.cycle,
       icon: (
@@ -121,10 +134,11 @@ export default function InsightsPage() {
       bg: 'bg-red-500/10',
     },
     {
+      id: 'genetics',
       title: 'Genetics',
-      description: 'Gene-lifestyle connections from GWAS research',
+      description: `Gene-lifestyle connections for ${conditionShort}`,
       href: '/insights/genetics',
-      stat: '12 key genes mapped',
+      stat: `Key genes for ${conditionShort}`,
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#10A37F]">
           <path d="M10 2v2M14 2v2M10 20v2M14 20v2M6 8h12M6 12h12M6 16h12M8 4a2 2 0 012-2h4a2 2 0 012 2v16a2 2 0 01-2 2h-4a2 2 0 01-2-2V4z" />
@@ -133,6 +147,7 @@ export default function InsightsPage() {
       bg: 'bg-[#10A37F]/10',
     },
     {
+      id: 'polyphenols',
       title: 'Polyphenols',
       description: 'Protective compounds in your food',
       href: '/insights/polyphenols',
@@ -147,10 +162,11 @@ export default function InsightsPage() {
       bg: 'bg-[#8B5CF6]/10',
     },
     {
+      id: 'circadian',
       title: 'Circadian Genes',
-      description: 'How sleep affects your genes',
+      description: `How sleep affects ${conditionShort}-related genes`,
       href: '/insights/circadian',
-      stat: '81 clock genes in IBD',
+      stat: `Clock genes in ${conditionShort}`,
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#0EA5E9]">
           <circle cx="12" cy="12" r="10" />
@@ -160,6 +176,7 @@ export default function InsightsPage() {
       bg: 'bg-[#0EA5E9]/10',
     },
     {
+      id: 'brain',
       title: 'Aafiya\'s Brain',
       description: 'Personal triggers, discoveries & how Aafiya learns',
       href: '/insights/learn',
@@ -172,8 +189,9 @@ export default function InsightsPage() {
       bg: 'bg-[#EC4899]/10',
     },
     {
+      id: 'research',
       title: 'Research Sources',
-      description: '12 scientific databases powering Aafiya',
+      description: 'Scientific databases powering Aafiya',
       href: '/insights/research',
       stat: '5 live APIs + 4 datasets',
       icon: (
@@ -186,6 +204,12 @@ export default function InsightsPage() {
       bg: 'bg-[#6366F1]/10',
     },
   ];
+
+  // Filter out cycle card when not applicable
+  const visibleCards = cards.filter(card => {
+    if (card.id === 'cycle' && !showCycle) return false;
+    return true;
+  });
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 pb-24">
@@ -201,7 +225,7 @@ export default function InsightsPage() {
 
       {/* Cards Grid */}
       <div className="grid grid-cols-2 gap-3">
-        {cards.map(card => (
+        {visibleCards.map(card => (
           <Link key={card.href} href={card.href}>
             <Card padding="md" className="h-full hover:shadow-sm transition-shadow">
               <div className={`w-10 h-10 rounded-lg ${card.bg} flex items-center justify-center mb-3`}>

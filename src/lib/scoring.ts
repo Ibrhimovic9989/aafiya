@@ -18,8 +18,20 @@ export interface ScoreInput {
 export function calculateActivityScore(scoring: ScoringSystem, input: ScoreInput): number {
   let total = 0;
 
+  // Normalize input keys: accept both snake_case (from AI agent) and camelCase (from scoring components)
+  const normalized: Record<string, number | string[]> = {};
+  for (const [key, val] of Object.entries(input.components)) {
+    // Store both original and camelCase version
+    normalized[key] = val;
+    const camel = key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+    if (camel !== key) normalized[camel] = val;
+    // Also store snake_case of camelCase keys
+    const snake = key.replace(/[A-Z]/g, m => `_${m.toLowerCase()}`);
+    if (snake !== key) normalized[snake] = val;
+  }
+
   for (const component of scoring.components) {
-    const value = input.components[component.id];
+    const value = normalized[component.id];
 
     if (component.type === 'checklist' && Array.isArray(value)) {
       total += value.length;

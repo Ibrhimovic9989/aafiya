@@ -105,6 +105,8 @@ model UserProfile {
   doctorContact      String   @default("") // @encrypted
   onboardingComplete Boolean  @default(false)
   trackCycle         Boolean  @default(true)
+  gender             String   @default("") // male | female | other | prefer_not_to_say
+  medicationTimings  Json     @default("[]") // [{name: string, times: string[]}]
 
   // Notification preferences
   notificationsEnabled Boolean @default(true)

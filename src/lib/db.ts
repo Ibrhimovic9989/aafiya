@@ -188,6 +188,8 @@ export interface UserProfile {
   doctorContact: string;
   onboardingComplete: boolean;
   trackCycle: boolean; // whether to show cycle tracking
+  gender: string; // male | female | other | prefer_not_to_say
+  medicationTimings: { name: string; times: string[] }[]; // per-med time config
   timezone: string; // IANA timezone (e.g., "Asia/Kolkata")
 }
 

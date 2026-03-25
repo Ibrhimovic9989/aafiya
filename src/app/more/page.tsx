@@ -34,6 +34,8 @@ export default function MorePage() {
     doctorContact: '',
     onboardingComplete: false,
     trackCycle: true,
+    gender: '',
+    medicationTimings: [],
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
   const [detectedTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -212,6 +214,33 @@ export default function MorePage() {
           </Card>
 
           <Card padding="md">
+            <label className="block text-xs font-medium text-text-secondary mb-1">Gender</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: 'female', label: 'Female' },
+                { value: 'male', label: 'Male' },
+                { value: 'other', label: 'Other' },
+              ].map(g => (
+                <button
+                  key={g.value}
+                  onClick={() => setProfile(prev => ({
+                    ...prev,
+                    gender: g.value,
+                    ...(g.value === 'male' ? { trackCycle: false } : {}),
+                  }))}
+                  className={`px-3 py-2 rounded-lg text-[13px] font-medium transition-all ${
+                    profile.gender === g.value
+                      ? 'bg-accent text-white'
+                      : 'bg-bg-secondary text-text-primary hover:bg-bg-tertiary'
+                  }`}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          </Card>
+
+          <Card padding="md">
             <label className="block text-xs font-medium text-text-secondary mb-1">Additional Details</label>
             <input
               type="text"
@@ -298,7 +327,83 @@ export default function MorePage() {
             </Card>
           </div>
 
-          {/* Cycle Tracking Toggle */}
+          {/* Medication Timings */}
+          {profile.medications.length > 0 && (
+          <Card padding="md">
+            <label className="block text-xs font-medium text-text-secondary mb-2">Medication Timings</label>
+            <p className="text-[11px] text-text-tertiary mb-3">Set when you take each medication for timely reminders.</p>
+            <div className="space-y-3">
+              {profile.medications.map((med: string) => {
+                const timing = profile.medicationTimings?.find((t: any) => t.name === med);
+                const times = timing?.times || [];
+                return (
+                  <div key={med} className="p-2.5 rounded-lg bg-bg-secondary">
+                    <p className="text-[12px] font-medium text-text-primary mb-1.5">{med}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {times.map((time: string, ti: number) => (
+                        <div key={ti} className="flex items-center gap-1">
+                          <input
+                            type="time"
+                            value={time}
+                            onChange={e => {
+                              setProfile(prev => ({
+                                ...prev,
+                                medicationTimings: prev.medicationTimings.map((t: any) =>
+                                  t.name === med
+                                    ? { ...t, times: t.times.map((tt: string, tti: number) => tti === ti ? e.target.value : tt) }
+                                    : t
+                                ),
+                              }));
+                            }}
+                            className="px-2 py-1 rounded bg-bg text-[12px] text-text-primary border border-border outline-none focus:ring-1 focus:ring-accent/30"
+                          />
+                          {times.length > 1 && (
+                            <button
+                              onClick={() => setProfile(prev => ({
+                                ...prev,
+                                medicationTimings: prev.medicationTimings.map((t: any) =>
+                                  t.name === med ? { ...t, times: t.times.filter((_: string, tti: number) => tti !== ti) } : t
+                                ),
+                              }))}
+                              className="text-text-tertiary hover:text-red-500"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => {
+                          setProfile(prev => {
+                            const existing = prev.medicationTimings.find((t: any) => t.name === med);
+                            if (existing) {
+                              return {
+                                ...prev,
+                                medicationTimings: prev.medicationTimings.map((t: any) =>
+                                  t.name === med ? { ...t, times: [...t.times, '08:00'] } : t
+                                ),
+                              };
+                            }
+                            return {
+                              ...prev,
+                              medicationTimings: [...prev.medicationTimings, { name: med, times: ['08:00'] }],
+                            };
+                          });
+                        }}
+                        className="px-2 py-1 rounded bg-accent/10 text-accent text-[11px] font-medium hover:bg-accent/20"
+                      >
+                        {times.length === 0 ? 'Set time' : '+ Add time'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+          )}
+
+          {/* Cycle Tracking Toggle — hidden for males */}
+          {profile.gender !== 'male' && (
           <Card padding="md">
             <div className="flex items-center justify-between">
               <div>
@@ -313,9 +418,10 @@ export default function MorePage() {
               </button>
             </div>
           </Card>
+          )}
 
           {/* Cycle Config */}
-          {profile.trackCycle && (
+          {profile.gender !== 'male' && profile.trackCycle && (
           <div className="grid grid-cols-2 gap-3">
             <Card padding="md">
               <label className="block text-xs font-medium text-text-secondary mb-1">Cycle Start Date</label>

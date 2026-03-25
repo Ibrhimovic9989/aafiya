@@ -443,22 +443,57 @@ export default function AafiyaAgent() {
     const today = now.toISOString().split('T')[0];
 
     if (data.type === 'symptoms') {
+      // Normalize keys: the AI may send snake_case or camelCase
+      const norm = (key: string) => {
+        // Try camelCase, then snake_case
+        if (data[key] !== undefined) return data[key];
+        const snake = key.replace(/[A-Z]/g, m => `_${m.toLowerCase()}`);
+        if (data[snake] !== undefined) return data[snake];
+        return undefined;
+      };
+
       const score = calculateActivityScore(conditionProfile.scoring, { components: data });
       const severity = getSeverity(conditionProfile.scoring, score);
       const secondary = getSecondaryScore(conditionProfile.scoring, score) ?? 0;
       const isCrohns = conditionId === 'crohns';
+
+      // Build scoringComponents from the condition's scoring system
+      const scoringComponents: Record<string, number> = {};
+      for (const sc of conditionProfile.scoring.components) {
+        const val = norm(sc.id);
+        if (typeof val === 'number') scoringComponents[sc.id] = val;
+      }
+
       await addSymptom({
         date: today, timestamp: now.getTime(),
-        generalWellbeing: data.generalWellbeing || 0, painLevel: data.painLevel || 0,
-        painLocation: data.painLocation || 'none', liquidStools: data.liquidStools || 0,
-        abdominalMass: data.abdominalMass || 0, complications: data.complications || [],
-        bowelFrequency: data.liquidStools || 0, bristolScale: 4,
-        blood: data.blood || 'none', urgency: data.urgency || 0, fatigue: data.fatigue || 0,
-        nausea: data.nausea || 0, jointPain: (data.complications || []).includes('arthralgia') ? 5 : 0,
+        generalWellbeing: norm('generalWellbeing') || 0, painLevel: norm('painLevel') || 0,
+        painLocation: norm('painLocation') || 'none', liquidStools: norm('liquidStools') || 0,
+        abdominalMass: norm('abdominalMass') || 0, complications: data.complications || [],
+        bowelFrequency: norm('liquidStools') || 0, bristolScale: 4,
+        blood: norm('blood') || 'none', urgency: norm('urgency') || 0, fatigue: norm('fatigue') || 0,
+        nausea: norm('nausea') || 0,
+        jointPain: norm('jointPain') || norm('muscleJointAches') || ((data.complications || []).includes('arthralgia') ? 5 : 0),
         fever: data.fever || false,
         conditionId,
         activityScore: score,
         secondaryScore: secondary,
+        scoringComponents,
+        // Endocrine-specific fields
+        coldSensitivity: norm('coldSensitivity'),
+        weightChange: norm('weightChange') || norm('weightChanges'),
+        cognitiveFunction: norm('brainFog') || norm('cognitiveFunction'),
+        // Skin-specific
+        skinSeverity: norm('skinSeverity'),
+        bodyAreaAffected: norm('bodyAreaAffected'),
+        itching: norm('itching'),
+        // Neuro-specific
+        numbnessTingling: norm('numbnessTingling'),
+        visionIssues: norm('visionIssues'),
+        balanceIssues: norm('balanceIssues'),
+        // Joint-specific
+        morningStiffness: norm('morningStiffness'),
+        swollenJoints: norm('swollenJoints'),
+        tenderJoints: norm('tenderJoints'),
         hbiScore: isCrohns ? score : 0,
         cdaiEstimate: isCrohns ? secondary : 0,
       });

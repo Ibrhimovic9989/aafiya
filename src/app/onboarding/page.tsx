@@ -24,8 +24,10 @@ export default function OnboardingPage() {
   const [targetWakeTime, setTargetWakeTime] = useState('07:00');
   const [cycleStartDate, setCycleStartDate] = useState('');
   const [cycleLength, setCycleLength] = useState(28);
+  const [gender, setGender] = useState('');
   const [trackCycle, setTrackCycle] = useState(true);
   const [selectedMeds, setSelectedMeds] = useState<string[]>([]);
+  const [medTimings, setMedTimings] = useState<{ name: string; times: string[] }[]>([]);
 
   const stepIndex = steps.indexOf(step);
   const progress = ((stepIndex + 1) / steps.length) * 100;
@@ -40,13 +42,20 @@ export default function OnboardingPage() {
     }
   }, [conditionId]);
 
-  // Skip cycle step if condition has no menstrual impact
+  // Auto-disable cycle tracking for males
+  function handleGenderChange(g: string) {
+    setGender(g);
+    if (g === 'male') {
+      setTrackCycle(false);
+    }
+  }
+
   function handleProfileNext() {
     setStep('sleep');
   }
 
   function handleSleepNext() {
-    if (conditionProfile?.cycleImpact.hasImpact && trackCycle) {
+    if (gender !== 'male' && conditionProfile?.cycleImpact.hasImpact && trackCycle) {
       setStep('cycle');
     } else {
       setStep('medications');
@@ -71,6 +80,8 @@ export default function OnboardingPage() {
       doctorContact,
       onboardingComplete: true,
       trackCycle,
+      gender,
+      medicationTimings: medTimings,
       timezone: detectedTimezone,
     });
     router.push('/');
@@ -203,7 +214,32 @@ export default function OnboardingPage() {
                   placeholder="Phone or email" className={inputClass} />
               </div>
 
-              {/* Cycle tracking opt-in */}
+              {/* Gender selection */}
+              <div>
+                <label className={labelClass}>Gender</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: 'female', label: 'Female' },
+                    { value: 'male', label: 'Male' },
+                    { value: 'other', label: 'Other' },
+                  ].map(g => (
+                    <button
+                      key={g.value}
+                      onClick={() => handleGenderChange(g.value)}
+                      className={`px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
+                        gender === g.value
+                          ? 'bg-accent text-white'
+                          : 'border border-border text-text-primary hover:bg-bg-secondary'
+                      }`}
+                    >
+                      {g.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Cycle tracking opt-in — hidden for males */}
+              {gender !== 'male' && (
               <div className="flex items-center gap-3 p-3 rounded-lg border border-border">
                 <button
                   onClick={() => setTrackCycle(!trackCycle)}
@@ -216,6 +252,7 @@ export default function OnboardingPage() {
                   <p className="text-[11px] text-text-tertiary">Helps Aafiya understand hormone-related patterns</p>
                 </div>
               </div>
+              )}
             </div>
 
             <div className="flex gap-3 mt-8">
@@ -302,26 +339,75 @@ export default function OnboardingPage() {
                 ...(conditionProfile?.commonMedications.map(m => m.name) || []),
                 'Iron supplement', 'Vitamin D', 'Vitamin B12', 'Folic acid', 'Probiotics', 'Omega-3',
               ].filter((med, i, arr) => arr.indexOf(med) === i).map(med => (
-                <label key={med} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                  selectedMeds.includes(med)
-                    ? 'bg-accent-light border border-accent/20'
-                    : 'border border-border hover:bg-bg-secondary'
-                }`}>
-                  <div className={`w-4.5 h-4.5 rounded flex items-center justify-center transition-all ${
-                    selectedMeds.includes(med) ? 'bg-accent' : 'border-2 border-border'
+                <div key={med}>
+                  <label className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                    selectedMeds.includes(med)
+                      ? 'bg-accent-light border border-accent/20'
+                      : 'border border-border hover:bg-bg-secondary'
                   }`}>
-                    {selectedMeds.includes(med) && (
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
-                    )}
-                  </div>
-                  <input type="checkbox" checked={selectedMeds.includes(med)} className="hidden"
-                    onChange={e => {
-                      if (e.target.checked) setSelectedMeds(prev => [...prev, med]);
-                      else setSelectedMeds(prev => prev.filter(m => m !== med));
-                    }}
-                  />
-                  <span className="text-[13px] text-text-primary">{med}</span>
-                </label>
+                    <div className={`w-4.5 h-4.5 rounded flex items-center justify-center transition-all ${
+                      selectedMeds.includes(med) ? 'bg-accent' : 'border-2 border-border'
+                    }`}>
+                      {selectedMeds.includes(med) && (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
+                      )}
+                    </div>
+                    <input type="checkbox" checked={selectedMeds.includes(med)} className="hidden"
+                      onChange={e => {
+                        if (e.target.checked) {
+                          setSelectedMeds(prev => [...prev, med]);
+                          setMedTimings(prev => [...prev, { name: med, times: ['08:00'] }]);
+                        } else {
+                          setSelectedMeds(prev => prev.filter(m => m !== med));
+                          setMedTimings(prev => prev.filter(t => t.name !== med));
+                        }
+                      }}
+                    />
+                    <span className="text-[13px] text-text-primary">{med}</span>
+                  </label>
+                  {/* Timing config for selected meds */}
+                  {selectedMeds.includes(med) && (
+                    <div className="ml-8 mt-1 mb-2 p-2 rounded-lg bg-bg-secondary">
+                      <p className="text-[11px] text-text-tertiary mb-1.5">When do you take this?</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(medTimings.find(t => t.name === med)?.times || ['08:00']).map((time, ti) => (
+                          <div key={ti} className="flex items-center gap-1">
+                            <input
+                              type="time"
+                              value={time}
+                              onChange={e => {
+                                setMedTimings(prev => prev.map(t =>
+                                  t.name === med
+                                    ? { ...t, times: t.times.map((tt, tti) => tti === ti ? e.target.value : tt) }
+                                    : t
+                                ));
+                              }}
+                              className="px-2 py-1 rounded bg-bg text-[12px] text-text-primary border border-border outline-none focus:ring-1 focus:ring-accent/30"
+                            />
+                            {(medTimings.find(t => t.name === med)?.times.length || 0) > 1 && (
+                              <button
+                                onClick={() => setMedTimings(prev => prev.map(t =>
+                                  t.name === med ? { ...t, times: t.times.filter((_, tti) => tti !== ti) } : t
+                                ))}
+                                className="text-text-tertiary hover:text-red-500"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => setMedTimings(prev => prev.map(t =>
+                            t.name === med ? { ...t, times: [...t.times, '20:00'] } : t
+                          ))}
+                          className="px-2 py-1 rounded bg-accent/10 text-accent text-[11px] font-medium hover:bg-accent/20"
+                        >
+                          + Add time
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
 

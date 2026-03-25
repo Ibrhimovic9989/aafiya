@@ -67,17 +67,16 @@ INTENTS:
 FOLLOW-UP UI COMPONENTS (needs_more array):
 Use gentle, friendly question language.
 
-{ "type": "options", "key": "wellbeing", "question": "How are you feeling overall?", "options": [{"label": "Feeling good", "value": "0", "emoji": "😊"}, {"label": "A bit off", "value": "1", "emoji": "🙂"}, {"label": "Not great", "value": "2", "emoji": "😕"}, {"label": "Pretty rough", "value": "3", "emoji": "😣"}, {"label": "Terrible", "value": "4", "emoji": "😩"}] }
-
-{ "type": "scale", "key": "pain_level", "question": "How bad is the pain?", "min": 0, "max": 10, "low_label": "No pain", "high_label": "Worst pain" }
-
-{ "type": "scale", "key": "fatigue", "question": "Energy level today?", "min": 0, "max": 10, "low_label": "Exhausted", "high_label": "Full of energy" }
+${getUniversalUIComponents(cp)}
 
 { "type": "time_range", "key": "sleep_times", "question": "When did you fall asleep and wake up?" }
 
 { "type": "toggle", "key": "fever", "question": "Feeling feverish?" }
 
 ${getConditionSpecificUIComponents(cp)}
+
+IMPORTANT: The ${cp.scoring.name} score is calculated ONLY from these scoring components: ${cp.scoring.components.map(c => c.id).join(', ')}.
+You MUST collect values for ALL scoring components to get an accurate score. Ask about them naturally, 2-3 at a time.
 
 SAVE DATA formats:
 
@@ -89,8 +88,7 @@ For symptom_log save_data:
   "fatigue": 0-10,
   "fever": false,
   "complications": [],
-  "activityScore": <calculated ${cp.scoring.name} score>,
-  "scoringComponents": { <component_id: value pairs> }${getConditionSpecificSaveFields(cp)}
+${getScoringComponentSaveFields(cp)}
 }
 
 For food_log save_data:
@@ -160,36 +158,84 @@ NEARBY RESTROOMS:
 - If they ask about toilets/restrooms, tell them about the Nearby feature in the app.`;
 }
 
+/**
+ * Generate universal UI components, but only include ones
+ * that are actually in the condition's scoring system.
+ */
+function getUniversalUIComponents(cp: ConditionProfile): string {
+  const scoringIds = new Set(cp.scoring.components.map(c => c.id));
+  const components: string[] = [];
+
+  // Always show wellbeing — it's useful even if not scored
+  if (scoringIds.has('generalWellbeing')) {
+    components.push('{ "type": "options", "key": "generalWellbeing", "question": "How are you feeling overall?", "options": [{"label": "Feeling good", "value": "0", "emoji": "😊"}, {"label": "A bit off", "value": "1", "emoji": "🙂"}, {"label": "Not great", "value": "2", "emoji": "😕"}, {"label": "Pretty rough", "value": "3", "emoji": "😣"}, {"label": "Terrible", "value": "4", "emoji": "😩"}] }');
+  }
+
+  // Only show pain scale if condition scores it
+  if (scoringIds.has('painLevel') || scoringIds.has('abdominalPain') || scoringIds.has('overallPain')) {
+    const painId = scoringIds.has('abdominalPain') ? 'abdominalPain' : scoringIds.has('overallPain') ? 'overallPain' : 'painLevel';
+    components.push(`{ "type": "scale", "key": "${painId}", "question": "How bad is the pain?", "min": 0, "max": 10, "low_label": "No pain", "high_label": "Worst pain" }`);
+  }
+
+  // Only show fatigue if condition scores it
+  if (scoringIds.has('fatigue')) {
+    components.push('{ "type": "scale", "key": "fatigue", "question": "Energy level today?", "min": 0, "max": 10, "low_label": "Exhausted", "high_label": "Full of energy" }');
+  }
+
+  return components.join('\n\n');
+}
+
+/**
+ * Generate save_data field definitions from the scoring system.
+ */
+function getScoringComponentSaveFields(cp: ConditionProfile): string {
+  const lines: string[] = [];
+  lines.push(`  "activityScore": <calculated ${cp.scoring.name} score>,`);
+  lines.push(`  "scoringComponents": {`);
+  for (const sc of cp.scoring.components) {
+    if (sc.type === 'checklist') {
+      lines.push(`    "${sc.id}": [<selected item IDs>],`);
+    } else {
+      lines.push(`    "${sc.id}": ${sc.min}-${sc.max},`);
+    }
+  }
+  lines.push(`  }`);
+
+  // Add condition-specific DB fields
+  const extra = getConditionSpecificSaveFields(cp);
+  if (extra) lines.push(extra);
+
+  return lines.join('\n');
+}
+
 function getConditionSpecificUIComponents(cp: ConditionProfile): string {
   const components: string[] = [];
 
-  // GI conditions
+  // Dynamically generate UI components from the condition's scoring system
+  // Skip universal fields already present (wellbeing, pain_level, fatigue, fever)
+  const universalKeys = new Set(['generalWellbeing', 'painLevel', 'fatigue', 'fever', 'complications']);
+
+  for (const sc of cp.scoring.components) {
+    if (universalKeys.has(sc.id)) continue;
+
+    if (sc.type === 'checklist' && sc.checklistItems) {
+      const opts = sc.checklistItems.map(item =>
+        `{"label": "${item.label}", "value": "${item.id}"}`
+      ).join(', ');
+      components.push(`{ "type": "multi_select", "key": "${sc.id}", "question": "${sc.description || sc.label}", "options": [${opts}] }`);
+    } else if (sc.type === 'count') {
+      components.push(`{ "type": "counter", "key": "${sc.id}", "question": "${sc.description || sc.label}" }`);
+    } else {
+      // scale
+      components.push(`{ "type": "scale", "key": "${sc.id}", "question": "${sc.description || sc.label}", "min": ${sc.min}, "max": ${sc.max}, "low_label": "None", "high_label": "Severe" }`);
+    }
+  }
+
+  // Also add category-specific DB fields not in scoring but useful for tracking
   if (cp.category === 'gastrointestinal') {
-    components.push('{ "type": "counter", "key": "liquid_stools", "question": "How many times did you have to rush to the loo today?" }');
-    components.push('{ "type": "options", "key": "blood", "question": "Any blood when you go?", "options": [{"label": "None", "value": "none"}, {"label": "A little", "value": "trace"}, {"label": "Some", "value": "moderate"}, {"label": "A lot", "value": "severe"}] }');
-  }
-
-  // Rheumatic conditions
-  if (cp.category === 'rheumatic') {
-    components.push('{ "type": "counter", "key": "morning_stiffness", "question": "How long was your morning stiffness? (minutes)" }');
-    components.push('{ "type": "scale", "key": "joint_pain", "question": "How are your joints feeling?", "min": 0, "max": 10, "low_label": "No pain", "high_label": "Worst pain" }');
-  }
-
-  // Skin conditions
-  if (cp.category === 'dermatological') {
-    components.push('{ "type": "scale", "key": "skin_severity", "question": "How does your skin look today?", "min": 0, "max": 10, "low_label": "Clear", "high_label": "Very affected" }');
-    components.push('{ "type": "scale", "key": "itching", "question": "Any itching?", "min": 0, "max": 10, "low_label": "None", "high_label": "Unbearable" }');
-  }
-
-  // Neurological
-  if (cp.category === 'neurological') {
-    components.push('{ "type": "scale", "key": "numbness", "question": "Any numbness or tingling?", "min": 0, "max": 10, "low_label": "None", "high_label": "Severe" }');
-    components.push('{ "type": "scale", "key": "cognitive", "question": "How clear is your thinking today?", "min": 0, "max": 10, "low_label": "Very foggy", "high_label": "Crystal clear" }');
-  }
-
-  // Endocrine
-  if (cp.category === 'endocrine') {
-    components.push('{ "type": "scale", "key": "brain_fog", "question": "Any brain fog today?", "min": 0, "max": 10, "low_label": "Clear headed", "high_label": "Very foggy" }');
+    if (!cp.scoring.components.some(c => c.id === 'blood')) {
+      components.push('{ "type": "options", "key": "blood", "question": "Any blood when you go?", "options": [{"label": "None", "value": "none"}, {"label": "A little", "value": "trace"}, {"label": "Some", "value": "moderate"}, {"label": "A lot", "value": "severe"}] }');
+    }
   }
 
   // Complications multi-select from condition profile
@@ -205,21 +251,26 @@ function getConditionSpecificUIComponents(cp: ConditionProfile): string {
 
 function getConditionSpecificSaveFields(cp: ConditionProfile): string {
   const fields: string[] = [];
+  const universalKeys = new Set(['generalWellbeing', 'painLevel', 'fatigue', 'fever', 'complications']);
 
+  // Generate save fields from the scoring system
+  for (const sc of cp.scoring.components) {
+    if (universalKeys.has(sc.id)) continue;
+
+    if (sc.type === 'checklist') {
+      fields.push(`"${sc.id}": string[]`);
+    } else if (sc.type === 'count') {
+      fields.push(`"${sc.id}": number`);
+    } else {
+      fields.push(`"${sc.id}": ${sc.min}-${sc.max}`);
+    }
+  }
+
+  // Add category-specific DB fields not in scoring
   if (cp.category === 'gastrointestinal') {
-    fields.push('"liquidStools": number', '"blood": "none"|"trace"|"moderate"|"severe"', '"urgency": 0-10', '"nausea": 0-10');
-  }
-  if (cp.category === 'rheumatic') {
-    fields.push('"jointPain": 0-10', '"morningStiffness": minutes', '"swollenJoints": count', '"tenderJoints": count');
-  }
-  if (cp.category === 'dermatological') {
-    fields.push('"skinSeverity": 0-10', '"itching": 0-10', '"bodyAreaAffected": 0-10');
-  }
-  if (cp.category === 'neurological') {
-    fields.push('"numbnessTingling": 0-10', '"visionIssues": 0-10', '"balanceIssues": 0-10', '"cognitiveFunction": 0-10');
-  }
-  if (cp.category === 'endocrine') {
-    fields.push('"coldSensitivity": 0-5', '"weightChange": -5 to 5', '"bloodSugar": mg/dL');
+    if (!cp.scoring.components.some(c => c.id === 'blood')) {
+      fields.push('"blood": "none"|"trace"|"moderate"|"severe"');
+    }
   }
 
   if (fields.length === 0) return '';
