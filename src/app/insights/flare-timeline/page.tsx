@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { SymptomEntry } from '@/lib/db';
 import { getSymptomsByDateRange } from '@/actions/symptoms';
-import { getHBISeverity, getHBILabel, getHBISeverityColor } from '@/lib/scoring';
+import { getSeverity } from '@/lib/scoring';
+import { useCondition } from '@/lib/useCondition';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import {
@@ -21,10 +22,12 @@ import {
 interface ChartPoint {
   date: string;
   label: string;
-  hbi: number;
+  score: number;
 }
 
 export default function FlareTimelinePage() {
+  const { profile: conditionProfile } = useCondition();
+  const scoreName = conditionProfile.scoring.name;
   const [data, setData] = useState<ChartPoint[]>([]);
   const [events, setEvents] = useState<{ date: string; text: string; type: 'flare' | 'improvement' | 'info' }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,26 +55,27 @@ export default function FlareTimelinePage() {
 
       for (const [date, entry] of entries) {
         const d = new Date(date);
+        const score = (entry as any).activityScore ?? entry.hbiScore;
         points.push({
           date,
           label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          hbi: entry.hbiScore,
+          score,
         });
 
-        const severity = getHBISeverity(entry.hbiScore);
-        if (severity === 'severe') {
-          notable.push({ date, text: `Severe flare (HBI: ${entry.hbiScore})`, type: 'flare' });
-        } else if (severity === 'moderate' && prevScore !== null && prevScore < 8) {
-          notable.push({ date, text: `Entered moderate activity (HBI: ${entry.hbiScore})`, type: 'flare' });
-        } else if (prevScore !== null && prevScore >= 8 && entry.hbiScore < 5) {
-          notable.push({ date, text: `Returned to remission (HBI: ${entry.hbiScore})`, type: 'improvement' });
+        const severity = getSeverity(conditionProfile.scoring, score);
+        if (severity.id === 'severe') {
+          notable.push({ date, text: `Severe flare (${scoreName}: ${score})`, type: 'flare' });
+        } else if (severity.id === 'moderate' && prevScore !== null && getSeverity(conditionProfile.scoring, prevScore).id !== 'moderate' && getSeverity(conditionProfile.scoring, prevScore).id !== 'severe') {
+          notable.push({ date, text: `Entered moderate activity (${scoreName}: ${score})`, type: 'flare' });
+        } else if (prevScore !== null && getSeverity(conditionProfile.scoring, prevScore).id !== 'remission' && getSeverity(conditionProfile.scoring, score).id === 'remission') {
+          notable.push({ date, text: `Returned to remission (${scoreName}: ${score})`, type: 'improvement' });
         }
 
         if (entry.complications.length > 0) {
           notable.push({ date, text: `Complications: ${entry.complications.join(', ')}`, type: 'info' });
         }
 
-        prevScore = entry.hbiScore;
+        prevScore = score;
       }
 
       setData(points);
@@ -79,7 +83,7 @@ export default function FlareTimelinePage() {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [conditionProfile, scoreName]);
 
   if (loading) {
     return (
@@ -103,13 +107,13 @@ export default function FlareTimelinePage() {
 
       {data.length === 0 ? (
         <Card padding="lg" className="text-center">
-          <p className="text-text-secondary">No symptom data yet. Log your symptoms to see your HBI trend over time.</p>
+          <p className="text-text-secondary">No symptom data yet. Log your symptoms to see your {scoreName} trend over time.</p>
         </Card>
       ) : (
         <>
           {/* Chart */}
           <Card padding="md" className="mb-4">
-            <p className="text-sm font-semibold text-text-primary mb-3">HBI Score - Last 30 Days</p>
+            <p className="text-sm font-semibold text-text-primary mb-3">{scoreName} Score - Last 30 Days</p>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
@@ -131,8 +135,8 @@ export default function FlareTimelinePage() {
                       fontSize: '12px',
                     }}
                     formatter={(value: any) => [
-                      `${value} (${getHBILabel(getHBISeverity(Number(value)))})`,
-                      'HBI',
+                      `${value} (${getSeverity(conditionProfile.scoring, Number(value)).label})`,
+                      scoreName,
                     ]}
                   />
                   <ReferenceLine y={5} stroke="#10A37F" strokeDasharray="5 5" label={{ value: 'Remission', position: 'right', fontSize: 9, fill: '#10A37F' }} />
@@ -140,7 +144,7 @@ export default function FlareTimelinePage() {
                   <ReferenceLine y={16} stroke="#EF4444" strokeDasharray="5 5" label={{ value: 'Severe', position: 'right', fontSize: 9, fill: '#EF4444' }} />
                   <Line
                     type="monotone"
-                    dataKey="hbi"
+                    dataKey="score"
                     stroke="#10A37F"
                     strokeWidth={2}
                     dot={{ fill: '#10A37F', r: 3 }}

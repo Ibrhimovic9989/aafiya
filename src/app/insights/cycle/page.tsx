@@ -8,6 +8,7 @@ import { getCycleByDateRange } from '@/actions/cycle';
 import { getProfile } from '@/actions/profile';
 import { PHASE_COLORS, PHASE_LABELS, CyclePhase, getPhaseFromDay } from '@/lib/cyclePhase';
 import { mean } from '@/lib/statistics';
+import { useCondition } from '@/lib/useCondition';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import {
@@ -24,7 +25,7 @@ import {
 interface PhaseData {
   phase: CyclePhase;
   label: string;
-  avgHBI: number;
+  avgScore: number;
   count: number;
   color: string;
 }
@@ -39,6 +40,8 @@ interface CycleInsight {
 }
 
 export default function CycleCorrelationPage() {
+  const { profile: conditionProfile } = useCondition();
+  const scoreName = conditionProfile.scoring.name;
   const [insight, setInsight] = useState<CycleInsight | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -62,10 +65,10 @@ export default function CycleCorrelationPage() {
       // Build symptom lookup by date
       const symptomByDate = new Map<string, number>();
       for (const s of symptoms) {
-        symptomByDate.set(s.date, s.hbiScore);
+        symptomByDate.set(s.date, (s as any).activityScore ?? s.hbiScore);
       }
 
-      // Group HBI scores by cycle phase
+      // Group scores by cycle phase
       const phaseScores: Record<CyclePhase, number[]> = {
         menstrual: [],
         follicular: [],
@@ -75,9 +78,9 @@ export default function CycleCorrelationPage() {
 
       // Use cycle entries to map dates to phases
       for (const c of cycle) {
-        const hbi = symptomByDate.get(c.date);
-        if (hbi !== undefined) {
-          phaseScores[c.phase as CyclePhase]?.push(hbi);
+        const score = symptomByDate.get(c.date);
+        if (score !== undefined) {
+          phaseScores[c.phase as CyclePhase]?.push(score);
         }
       }
 
@@ -92,7 +95,7 @@ export default function CycleCorrelationPage() {
             const diffDays = Math.floor((current.getTime() - start.getTime()) / (86400000));
             const cycleDay = (diffDays % (profile.cycleLength || 28)) + 1;
             const phase = getPhaseFromDay(cycleDay, profile.cycleLength || 28);
-            phaseScores[phase].push(s.hbiScore);
+            phaseScores[phase].push((s as any).activityScore ?? s.hbiScore);
           }
         }
       }
@@ -101,14 +104,14 @@ export default function CycleCorrelationPage() {
       const phaseData: PhaseData[] = phases.map(phase => ({
         phase,
         label: PHASE_LABELS[phase],
-        avgHBI: phaseScores[phase].length > 0 ? mean(phaseScores[phase]) : 0,
+        avgScore: phaseScores[phase].length > 0 ? mean(phaseScores[phase]) : 0,
         count: phaseScores[phase].length,
         color: PHASE_COLORS[phase],
       }));
 
       const withData = phaseData.filter(p => p.count > 0);
-      const worstPhase = withData.length > 0 ? withData.reduce((a, b) => a.avgHBI > b.avgHBI ? a : b).label : '';
-      const bestPhase = withData.length > 0 ? withData.reduce((a, b) => a.avgHBI < b.avgHBI ? a : b).label : '';
+      const worstPhase = withData.length > 0 ? withData.reduce((a, b) => a.avgScore > b.avgScore ? a : b).label : '';
+      const bestPhase = withData.length > 0 ? withData.reduce((a, b) => a.avgScore < b.avgScore ? a : b).label : '';
       const hasEnoughData = withData.length >= 2 && withData.some(p => p.count >= 3);
 
       setInsight({
@@ -164,7 +167,7 @@ export default function CycleCorrelationPage() {
           {/* Phase Chart */}
           {insight.phaseData.some(p => p.count > 0) && (
             <Card padding="md">
-              <p className="text-sm font-semibold text-text-primary mb-3">Average HBI by Cycle Phase</p>
+              <p className="text-sm font-semibold text-text-primary mb-3">Average {scoreName} by Cycle Phase</p>
               <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={insight.phaseData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
@@ -173,9 +176,9 @@ export default function CycleCorrelationPage() {
                     <YAxis tick={{ fontSize: 10, fill: '#94A3B8' }} />
                     <Tooltip
                       contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E5E6', borderRadius: '8px', fontSize: '12px' }}
-                      formatter={(value: any) => [Number(value).toFixed(1), 'Avg HBI']}
+                      formatter={(value: any) => [Number(value).toFixed(1), `Avg ${scoreName}`]}
                     />
-                    <Bar dataKey="avgHBI" radius={[6, 6, 0, 0]}>
+                    <Bar dataKey="avgScore" radius={[6, 6, 0, 0]}>
                       {insight.phaseData.map((entry, index) => (
                         <Cell key={index} fill={entry.color} />
                       ))}
@@ -205,7 +208,7 @@ export default function CycleCorrelationPage() {
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 rounded-full bg-[#F97316] mt-1.5 flex-shrink-0" />
                     <p className="text-sm text-text-primary">
-                      Your worst phase is <span className="font-semibold">{insight.worstPhase}</span> with the highest average HBI score.
+                      Your worst phase is <span className="font-semibold">{insight.worstPhase}</span> with the highest average score.
                     </p>
                   </div>
                 )}
@@ -213,7 +216,7 @@ export default function CycleCorrelationPage() {
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 rounded-full bg-accent mt-1.5 flex-shrink-0" />
                     <p className="text-sm text-text-primary">
-                      Your best phase is <span className="font-semibold">{insight.bestPhase}</span> with the lowest average HBI score.
+                      Your best phase is <span className="font-semibold">{insight.bestPhase}</span> with the lowest average score.
                     </p>
                   </div>
                 )}
@@ -248,8 +251,8 @@ export default function CycleCorrelationPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-text-secondary">{p.count} days</span>
-                    <Badge variant={p.avgHBI >= 8 ? 'danger' : p.avgHBI >= 5 ? 'warning' : 'success'}>
-                      {p.count > 0 ? `HBI ${p.avgHBI.toFixed(1)}` : 'No data'}
+                    <Badge variant={p.avgScore >= 8 ? 'danger' : p.avgScore >= 5 ? 'warning' : 'success'}>
+                      {p.count > 0 ? `${scoreName} ${p.avgScore.toFixed(1)}` : 'No data'}
                     </Badge>
                   </div>
                 </div>

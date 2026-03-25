@@ -78,7 +78,7 @@ export function calculateFlareRisk(data: {
 
   // 4. Menstrual Phase
   if (data.cycleStartDate) {
-    const cycleScore = calculateCycleFactor(data.cycleStartDate, data.currentDate, data.cycleLength, w.menstrualPhase);
+    const cycleScore = calculateCycleFactor(data.cycleStartDate, data.currentDate, data.cycleLength, w.menstrualPhase, data.conditionProfile);
     factors.push(cycleScore.factor);
     totalScore += cycleScore.contribution;
   }
@@ -102,7 +102,7 @@ export function calculateFlareRisk(data: {
   totalScore = Math.max(0, Math.min(100, Math.round(totalScore)));
 
   const level = getRiskLevel(totalScore);
-  const recommendation = getRecommendation(level, factors);
+  const recommendation = getRecommendation(level, factors, data.conditionProfile);
   const topConcern = factors
     .filter(f => f.direction === 'up')
     .sort((a, b) => b.contribution - a.contribution)[0]?.detail || null;
@@ -118,7 +118,7 @@ function calculateHBITrend(symptoms: SymptomEntry[], weight: number = 25): { fac
     };
   }
 
-  const scores = symptoms.map(s => s.hbiScore);
+  const scores = symptoms.map(s => (s as any).activityScore ?? s.hbiScore);
   const avg = mean(scores);
   const recent = mean(scores.slice(-3));
   const trending = recent > avg;
@@ -128,8 +128,8 @@ function calculateHBITrend(symptoms: SymptomEntry[], weight: number = 25): { fac
 
   const contribution = hbiContribution + trendMod;
   const detail = trending
-    ? `HBI trending up (${recent.toFixed(1)} vs ${avg.toFixed(1)} avg)`
-    : `HBI stable/improving (${recent.toFixed(1)} recent)`;
+    ? `Activity score trending up (${recent.toFixed(1)} vs ${avg.toFixed(1)} avg)`
+    : `Activity score stable/improving (${recent.toFixed(1)} recent)`;
 
   return {
     factor: { factor: 'Symptom Trend', contribution: Math.round(contribution), direction: trending ? 'up' : 'down', detail, weight },
@@ -207,20 +207,31 @@ function calculateCycleFactor(
   cycleStartDate: string,
   currentDate: string,
   cycleLength: number = 28,
-  weight: number = 15
+  weight: number = 15,
+  conditionProfile?: ConditionProfile
 ): { factor: FlareRiskFactor; contribution: number } {
   const info = getCycleInfo(cycleStartDate, currentDate, cycleLength);
 
   // Use Kaggle-backed cycle phase data for more precise risk multiplier
   const phaseProfile = getCyclePhaseForDay(info.cycleDay, cycleLength);
-  const riskMultiplier = phaseProfile.ibdImpact.riskMultiplier;
+
+  // Use condition-specific cycle impact data if available, otherwise fall back to hardcoded IBD data
+  let riskMultiplier = phaseProfile.ibdImpact.riskMultiplier;
+  let commonSymptoms = phaseProfile.ibdImpact.commonSymptoms;
+  if (conditionProfile?.cycleImpact.phases.length) {
+    const conditionPhase = conditionProfile.cycleImpact.phases.find(p => p.phase === phaseProfile.phase);
+    if (conditionPhase) {
+      riskMultiplier = conditionPhase.riskMultiplier;
+      commonSymptoms = conditionPhase.commonSymptoms;
+    }
+  }
+
   const contribution = (riskMultiplier - 1) * weight / 0.4;
 
   const direction = riskMultiplier > 1.1 ? 'up' : 'down';
-  // Include Kaggle-backed symptom expectations
-  const expectedSymptoms = phaseProfile.ibdImpact.commonSymptoms.slice(0, 2).join(', ');
+  const expectedSymptoms = commonSymptoms.slice(0, 2).join(', ');
   const detail = riskMultiplier > 1.1
-    ? `${phaseProfile.phase} phase (Day ${info.cycleDay}) — ${phaseProfile.ibdImpact.riskLevel} risk. Common: ${expectedSymptoms}`
+    ? `${phaseProfile.phase} phase (Day ${info.cycleDay}) — elevated risk. Common: ${expectedSymptoms}`
     : `${phaseProfile.phase} phase (Day ${info.cycleDay}) — ${phaseProfile.aafiyaTip}`;
 
   return {
@@ -363,18 +374,37 @@ function getRecommendation(level: string, factors: FlareRiskFactor[], conditionP
 }
 
 /**
- * Get contextual benchmark comparison for an HBI score
- * Uses OHDSI population data
+ * Get contextual benchmark comparison for an activity score.
+ * When a conditionProfile is provided, uses its severity levels.
+ * Falls back to HBI benchmarks from OHDSI population data.
  */
-export function getHBIBenchmarkContext(hbi: number): string {
-  if (hbi < BENCHMARKS.hbi.remission.max) {
-    return `HBI ${hbi} is in remission range (population avg in remission: 2.3). You're doing well.`;
-  } else if (hbi <= BENCHMARKS.hbi.mild.max) {
-    return `HBI ${hbi} is mild activity. Population data shows 30-50% of patients flare annually even on treatment — watch closely.`;
-  } else if (hbi <= BENCHMARKS.hbi.moderate.max) {
-    return `HBI ${hbi} indicates moderate activity. Consider contacting your doctor.`;
+export function getHBIBenchmarkContext(score: number, conditionProfile?: ConditionProfile): string {
+  if (conditionProfile) {
+    const { scoring } = conditionProfile;
+    // Find the matching severity level from the condition profile
+    for (const level of scoring.severityLevels) {
+      if (score >= level.range[0] && score <= level.range[1]) {
+        const scoreName = scoring.name;
+        if (level.id === 'remission' || level.range[0] === 0) {
+          return `${scoreName} ${score} is in ${level.label.toLowerCase()} range. You're doing well.`;
+        } else if (level === scoring.severityLevels[scoring.severityLevels.length - 1]) {
+          return `${scoreName} ${score} indicates ${level.label.toLowerCase()}. Please contact your doctor urgently.`;
+        } else {
+          return `${scoreName} ${score} indicates ${level.label.toLowerCase()}. Consider contacting your doctor.`;
+        }
+      }
+    }
+  }
+
+  // Fallback to hardcoded HBI benchmarks
+  if (score < BENCHMARKS.hbi.remission.max) {
+    return `HBI ${score} is in remission range (population avg in remission: 2.3). You're doing well.`;
+  } else if (score <= BENCHMARKS.hbi.mild.max) {
+    return `HBI ${score} is mild activity. Population data shows 30-50% of patients flare annually even on treatment — watch closely.`;
+  } else if (score <= BENCHMARKS.hbi.moderate.max) {
+    return `HBI ${score} indicates moderate activity. Consider contacting your doctor.`;
   } else {
-    return `HBI ${hbi} is severe. Please contact your doctor urgently.`;
+    return `HBI ${score} is severe. Please contact your doctor urgently.`;
   }
 }
 

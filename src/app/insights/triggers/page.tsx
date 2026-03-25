@@ -8,15 +8,18 @@ import { getSymptomsByDateRange } from '@/actions/symptoms';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { mean } from '@/lib/statistics';
+import { useCondition } from '@/lib/useCondition';
 
 interface TriggerAnalysis {
   riskCounts: { low: number; medium: number; high: number };
   totalEntries: number;
   topWarnings: { compound: string; count: number }[];
-  foodCorrelations: { food: string; avgNextDayHBI: number; occurrences: number }[];
+  foodCorrelations: { food: string; avgNextDayScore: number; occurrences: number }[];
 }
 
 export default function TriggersPage() {
+  const { profile: conditionProfile } = useCondition();
+  const scoreName = conditionProfile.scoring.name;
   const [analysis, setAnalysis] = useState<TriggerAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -60,32 +63,32 @@ export default function TriggersPage() {
         // Build symptom lookup by date
         const symptomByDate = new Map<string, number>();
         for (const s of symptoms) {
-          symptomByDate.set(s.date, s.hbiScore);
+          symptomByDate.set(s.date, (s as any).activityScore ?? s.hbiScore);
         }
 
-        // Group foods by description, find next-day HBI
-        const foodHBIMap = new Map<string, number[]>();
+        // Group foods by description, find next-day score
+        const foodScoreMap = new Map<string, number[]>();
         for (const f of food) {
           const nextDay = new Date(new Date(f.date).getTime() + 86400000).toISOString().split('T')[0];
-          const nextDayHBI = symptomByDate.get(nextDay);
-          if (nextDayHBI !== undefined) {
+          const nextDayScore = symptomByDate.get(nextDay);
+          if (nextDayScore !== undefined) {
             const key = f.description.toLowerCase().trim();
-            if (!foodHBIMap.has(key)) foodHBIMap.set(key, []);
-            foodHBIMap.get(key)!.push(nextDayHBI);
+            if (!foodScoreMap.has(key)) foodScoreMap.set(key, []);
+            foodScoreMap.get(key)!.push(nextDayScore);
           }
         }
 
-        for (const [food, scores] of foodHBIMap.entries()) {
+        for (const [food, scores] of foodScoreMap.entries()) {
           if (scores.length >= 2) {
             foodCorrelations.push({
               food,
-              avgNextDayHBI: mean(scores),
+              avgNextDayScore: mean(scores),
               occurrences: scores.length,
             });
           }
         }
 
-        foodCorrelations.sort((a: any, b: any) => b.avgNextDayHBI - a.avgNextDayHBI);
+        foodCorrelations.sort((a: any, b: any) => b.avgNextDayScore - a.avgNextDayScore);
       }
 
       setAnalysis({
@@ -184,15 +187,15 @@ export default function TriggersPage() {
           {analysis.foodCorrelations.length > 0 && (
             <Card padding="md">
               <p className="text-sm font-semibold text-text-primary mb-1">Food-Symptom Correlations</p>
-              <p className="text-[10px] text-text-secondary mb-3">Foods and their average next-day HBI score</p>
+              <p className="text-[10px] text-text-secondary mb-3">Foods and their average next-day {scoreName} score</p>
               <div className="space-y-2">
                 {analysis.foodCorrelations.map((fc, i) => (
                   <div key={i} className="flex items-center justify-between gap-2">
                     <span className="text-sm text-text-primary truncate flex-1 capitalize">{fc.food}</span>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-[10px] text-text-secondary">{fc.occurrences}x</span>
-                      <Badge variant={fc.avgNextDayHBI >= 8 ? 'danger' : fc.avgNextDayHBI >= 5 ? 'warning' : 'success'}>
-                        HBI {fc.avgNextDayHBI.toFixed(1)}
+                      <Badge variant={fc.avgNextDayScore >= 8 ? 'danger' : fc.avgNextDayScore >= 5 ? 'warning' : 'success'}>
+                        {scoreName} {fc.avgNextDayScore.toFixed(1)}
                       </Badge>
                     </div>
                   </div>

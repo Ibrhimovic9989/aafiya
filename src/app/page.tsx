@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { type FoodItem, type CompoundProfile } from '@/lib/db';
-import { calculateHBI, estimateCDAI, getHBISeverity, getHBILabel } from '@/lib/scoring';
+import { calculateActivityScore, getSeverity, getSecondaryScore } from '@/lib/scoring';
+import { useCondition } from '@/lib/useCondition';
 import { calculateCircadianScore, calculateSocialJetLag, getSleepDuration, getProgressiveBedtimeTarget } from '@/lib/circadian';
 import { analyzeWithFooDB } from '@/lib/compounds';
 import { calculateFlareRisk, type FlareRiskResult, getRiskColor, getRiskLabel } from '@/lib/flarePredictor';
@@ -313,6 +314,7 @@ function DashboardCard({ flareRisk }: { flareRisk: FlareRiskResult | null }) {
 
 export default function AafiyaAgent() {
   const router = useRouter();
+  const { conditionId, profile: conditionProfile } = useCondition();
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [input, setInput] = useState('');
   const [processing, setProcessing] = useState(false);
@@ -441,14 +443,10 @@ export default function AafiyaAgent() {
     const today = now.toISOString().split('T')[0];
 
     if (data.type === 'symptoms') {
-      const hbi = calculateHBI({
-        generalWellbeing: data.generalWellbeing || 0,
-        abdominalPain: data.painLevel || 0,
-        liquidStools: data.liquidStools || 0,
-        abdominalMass: data.abdominalMass || 0,
-        complications: data.complications || [],
-      });
-      const cdai = estimateCDAI(hbi);
+      const score = calculateActivityScore(conditionProfile.scoring, { components: data });
+      const severity = getSeverity(conditionProfile.scoring, score);
+      const secondary = getSecondaryScore(conditionProfile.scoring, score) ?? 0;
+      const isCrohns = conditionId === 'crohns';
       await addSymptom({
         date: today, timestamp: now.getTime(),
         generalWellbeing: data.generalWellbeing || 0, painLevel: data.painLevel || 0,
@@ -457,12 +455,16 @@ export default function AafiyaAgent() {
         bowelFrequency: data.liquidStools || 0, bristolScale: 4,
         blood: data.blood || 'none', urgency: data.urgency || 0, fatigue: data.fatigue || 0,
         nausea: data.nausea || 0, jointPain: (data.complications || []).includes('arthralgia') ? 5 : 0,
-        fever: data.fever || false, hbiScore: hbi, cdaiEstimate: cdai,
+        fever: data.fever || false,
+        conditionId,
+        activityScore: score,
+        secondaryScore: secondary,
+        hbiScore: isCrohns ? score : 0,
+        cdaiEstimate: isCrohns ? secondary : 0,
       });
-      const severity = getHBISeverity(hbi);
       // Auto-run correlation analysis after symptom save (non-blocking)
       runCorrelationAnalysisAction().catch(() => {});
-      return `Symptoms saved — HBI: ${hbi} (${getHBILabel(severity)})`;
+      return `Symptoms saved — ${conditionProfile.scoring.name}: ${score} (${severity.label})`;
     }
 
     if (data.type === 'food') {

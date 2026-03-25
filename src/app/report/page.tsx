@@ -10,7 +10,8 @@ import { getFoodByDateRange } from '@/actions/food';
 import { getMedicationsByDateRange } from '@/actions/medications';
 import { getCycleByDateRange } from '@/actions/cycle';
 import { getExperiments } from '@/actions/experiments';
-import { getHBISeverity, getHBILabel, estimateCDAI } from '@/lib/scoring';
+import { getSeverity, getSecondaryScore } from '@/lib/scoring';
+import { useCondition } from '@/lib/useCondition';
 import { mean } from '@/lib/statistics';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -31,6 +32,7 @@ interface ReportData {
 }
 
 export default function ReportPage() {
+  const { profile: conditionProfile } = useCondition();
   const [range, setRange] = useState<DateRange>('1month');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
@@ -62,14 +64,16 @@ export default function ReportPage() {
       getProfile(),
     ]);
 
-    // HBI
-    const hbiScores = symptoms.map((s: any) => s.hbiScore);
-    const hbiAvg = hbiScores.length > 0 ? mean(hbiScores) : 0;
-    const hbiMin = hbiScores.length > 0 ? Math.min(...hbiScores) : 0;
-    const hbiMax = hbiScores.length > 0 ? Math.max(...hbiScores) : 0;
+    // Activity scores (backward-compat: fall back to legacy hbiScore)
+    const activityScores = symptoms.map((s: any) => s.activityScore ?? s.hbiScore);
+    const hbiAvg = activityScores.length > 0 ? mean(activityScores) : 0;
+    const hbiMin = activityScores.length > 0 ? Math.min(...activityScores) : 0;
+    const hbiMax = activityScores.length > 0 ? Math.max(...activityScores) : 0;
 
-    // CDAI
-    const cdaiScores = hbiScores.map((h: any) => estimateCDAI(h));
+    // Secondary score (e.g., CDAI from HBI) — only if the condition has one
+    const cdaiScores = conditionProfile.scoring.estimateFormula
+      ? activityScores.map((h: any) => getSecondaryScore(conditionProfile.scoring, h)!)
+      : [];
     const cdaiAvg = cdaiScores.length > 0 ? mean(cdaiScores) : 0;
 
     // Medication adherence
@@ -102,7 +106,7 @@ export default function ReportPage() {
     let cycleData = null;
     if (cycle.length > 0) {
       const phaseHBI: Record<string, number[]> = {};
-      const symptomByDate = new Map<string, number>(symptoms.map((s: any) => [s.date, s.hbiScore]));
+      const symptomByDate = new Map<string, number>(symptoms.map((s: any) => [s.date, s.activityScore ?? s.hbiScore]));
       for (const c of cycle) {
         const hbi = symptomByDate.get((c as any).date);
         if (hbi !== undefined) {
@@ -127,7 +131,7 @@ export default function ReportPage() {
 
     setReport({
       dateRange: `${new Date(start).toLocaleDateString()} - ${new Date(end).toLocaleDateString()}`,
-      hbi: { avg: hbiAvg, min: hbiMin, max: hbiMax, entries: symptoms.length, severity: getHBILabel(getHBISeverity(hbiAvg)) },
+      hbi: { avg: hbiAvg, min: hbiMin, max: hbiMax, entries: symptoms.length, severity: getSeverity(conditionProfile.scoring, hbiAvg).label },
       cdai: { avg: cdaiAvg, min: cdaiScores.length > 0 ? Math.min(...cdaiScores) : 0, max: cdaiScores.length > 0 ? Math.max(...cdaiScores) : 0 },
       medAdherence: { pct: medPct, taken: medTaken, total: meds.length },
       sleep: { avgCircadian, avgDuration, avgJetLag, entries: sleep.length },
@@ -217,7 +221,7 @@ export default function ReportPage() {
 
           {/* HBI Summary */}
           <Card padding="md">
-            <p className="text-sm font-semibold text-text-primary mb-3">HBI Trend Summary</p>
+            <p className="text-sm font-semibold text-text-primary mb-3">{conditionProfile.scoring.name} Trend Summary</p>
             <div className="grid grid-cols-3 gap-3 mb-2">
               <div className="text-center">
                 <p className="text-xs text-text-secondary">Average</p>
@@ -237,25 +241,27 @@ export default function ReportPage() {
             </p>
           </Card>
 
-          {/* CDAI */}
-          <Card padding="md">
-            <p className="text-sm font-semibold text-text-primary mb-2">CDAI Estimates</p>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="text-center">
-                <p className="text-xs text-text-secondary">Average</p>
-                <p className="text-lg font-semibold text-text-primary">{report.cdai.avg.toFixed(0)}</p>
+          {/* Secondary Score (e.g., CDAI) — only shown if the condition has an estimate formula */}
+          {conditionProfile.scoring.estimateFormula && (
+            <Card padding="md">
+              <p className="text-sm font-semibold text-text-primary mb-2">{conditionProfile.scoring.estimateFormula.name} Estimates</p>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center">
+                  <p className="text-xs text-text-secondary">Average</p>
+                  <p className="text-lg font-semibold text-text-primary">{report.cdai.avg.toFixed(0)}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-text-secondary">Min</p>
+                  <p className="text-lg font-semibold text-accent">{report.cdai.min}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-text-secondary">Max</p>
+                  <p className="text-lg font-semibold text-[#F97316]">{report.cdai.max}</p>
+                </div>
               </div>
-              <div className="text-center">
-                <p className="text-xs text-text-secondary">Min</p>
-                <p className="text-lg font-semibold text-accent">{report.cdai.min}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-text-secondary">Max</p>
-                <p className="text-lg font-semibold text-[#F97316]">{report.cdai.max}</p>
-              </div>
-            </div>
-            <p className="text-[10px] text-text-tertiary mt-2">Estimated from HBI using regression: CDAI = 100 + 13 x HBI</p>
-          </Card>
+              <p className="text-[10px] text-text-tertiary mt-2">Estimated from {conditionProfile.scoring.name}</p>
+            </Card>
+          )}
 
           {/* Medication Adherence */}
           <Card padding="md">

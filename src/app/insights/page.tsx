@@ -8,6 +8,7 @@ import { getSleepByDateRange } from '@/actions/sleep';
 import { getCycleByDateRange } from '@/actions/cycle';
 import { Card } from '@/components/ui/Card';
 import { mean } from '@/lib/statistics';
+import { useCondition } from '@/lib/useCondition';
 
 interface InsightPreview {
   flareTimeline: string;
@@ -17,6 +18,8 @@ interface InsightPreview {
 }
 
 export default function InsightsPage() {
+  const { profile: conditionProfile } = useCondition();
+  const scoreName = conditionProfile.scoring.name;
   const [preview, setPreview] = useState<InsightPreview>({
     flareTimeline: 'Loading...',
     triggers: 'Loading...',
@@ -37,7 +40,7 @@ export default function InsightsPage() {
       ]);
 
       const flareTimeline = symptoms.length > 0
-        ? `Avg HBI: ${mean(symptoms.map((s: any) => s.hbiScore)).toFixed(1)} over ${symptoms.length} entries`
+        ? `Avg ${scoreName}: ${mean(symptoms.map((s: any) => s.activityScore ?? s.hbiScore)).toFixed(1)} over ${symptoms.length} entries`
         : 'No symptom data yet';
 
       const highRisk = food.filter((f: any) => f.mealRisk === 'high').length;
@@ -61,12 +64,12 @@ export default function InsightsPage() {
       });
     }
     loadPreviews();
-  }, []);
+  }, [scoreName]);
 
   const cards = [
     {
       title: 'Flare Timeline',
-      description: 'HBI scores and symptom trends over time',
+      description: `${scoreName} scores and symptom trends over time`,
       href: '/insights/flare-timeline',
       stat: preview.flareTimeline,
       icon: (
